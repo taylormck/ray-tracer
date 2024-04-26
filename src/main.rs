@@ -13,7 +13,7 @@ use hittable::HitRecord;
 use ray::Ray;
 use scene::Scene;
 use sphere::Sphere;
-use std::rc::Rc;
+use std::{ops::Range, rc::Rc};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: i32 = 800;
@@ -24,8 +24,12 @@ const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH as f64 / IMAGE_HEIGHT
 
 fn ray_color(r: &Ray, scene: &Scene) -> glm::DVec3 {
     let mut record = HitRecord::new();
+    let range = Range {
+        start: 0.0,
+        end: f64::INFINITY,
+    };
 
-    if scene.hit(r, 0.0, f64::INFINITY, &mut record) {
+    if scene.hit(r, &range, &mut record) {
         return (record.normal + glm::dvec3(1.0, 1.0, 1.0)) * 0.5;
     }
 

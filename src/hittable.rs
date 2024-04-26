@@ -2,6 +2,7 @@
 
 use crate::ray::Ray;
 use glm;
+use std::ops::Range;
 
 #[derive(Clone)]
 pub struct HitRecord {
@@ -30,5 +31,5 @@ impl HitRecord {
 }
 
 pub trait HittableObject {
-    fn hit(self: &Self, r: &Ray, ray_t_min: f64, ray_t_max: f64, record: &mut HitRecord) -> bool;
+    fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool;
 }

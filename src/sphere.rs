@@ -3,6 +3,7 @@
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
 use glm;
+use std::ops::Range;
 
 pub struct Sphere {
     center: glm::DVec3,
@@ -16,7 +17,7 @@ impl Sphere {
 }
 
 impl HittableObject for Sphere {
-    fn hit(self: &Self, r: &Ray, ray_t_min: f64, ray_t_max: f64, record: &mut HitRecord) -> bool {
+    fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let oc = self.center - r.origin();
         let a = glm::ext::sqlength(r.direction());
         let h = glm::dot(r.direction(), oc);
@@ -31,10 +32,10 @@ impl HittableObject for Sphere {
         let sqrt_discriminant = discriminant.sqrt();
         let mut root = (h - sqrt_discriminant) / a;
 
-        if root <= ray_t_min || root >= ray_t_max {
+        if !range.contains(&root) {
             root = (h + sqrt_discriminant) / a;
 
-            if root <= ray_t_min || root >= ray_t_max {
+            if !range.contains(&root) {
                 return false;
             }
         }
