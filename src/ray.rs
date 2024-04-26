@@ -15,4 +15,12 @@ impl Ray {
     pub fn at(&self, t: f64) -> glm::DVec3 {
         self.origin + self.direction * t
     }
+
+    pub fn origin(&self) -> glm::DVec3 {
+        self.origin
+    }
+
+    pub fn direction(&self) -> glm::DVec3 {
+        self.direction
+    }
 }

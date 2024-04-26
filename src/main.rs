@@ -8,14 +8,39 @@ mod pixel;
 mod ray;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: i32 = 400;
-const IMAGE_HEIGHT: i32 = IMAGE_WIDTH / ASPECT_RATIO as i32;
+const IMAGE_WIDTH: i32 = 800;
+const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
 const FOCAL_LENGTH: f64 = 1.0;
 const VIEWPORT_HEIGHT: f64 = 2.0;
 const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64);
 
-fn ray_color(_ray: &ray::Ray) -> glm::DVec3 {
-    glm::DVec3::new(1.0, 1.0, 1.0)
+fn hit_sphere(center: glm::DVec3, radius: f64, r: &ray::Ray) -> f64 {
+    let oc = center - r.origin();
+    let a = glm::ext::sqlength(r.direction());
+    let h = glm::dot(r.direction(), oc);
+    let c = glm::ext::sqlength(oc) - radius * radius;
+    let discriminant = h * h - a * c;
+
+    if discriminant < 0.0 {
+        return -1.0;
+    }
+
+    (h - discriminant.sqrt()) / a
+}
+
+fn ray_color(r: &ray::Ray) -> glm::DVec3 {
+    let t = hit_sphere(glm::dvec3(0.0, 0.0, -1.0), 0.5, r);
+
+    if t > 0.0 {
+        let n = r.at(t) - glm::dvec3(0.0, 0.0, -1.0);
+        let n = glm::normalize(n);
+
+        return glm::dvec3(n.x + 1.0, n.y + 1.0, n.z + 1.0) * 0.5;
+    }
+
+    let unit_ray = glm::normalize(r.direction());
+    let a = (unit_ray.y + 1.0) * 0.5;
+    glm::dvec3(1.0, 1.0, 1.0) * (1.0 - a) + glm::dvec3(0.5, 0.7, 1.0) * a
 }
 
 fn main() {
