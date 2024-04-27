@@ -8,8 +8,8 @@ use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: i32 = 1920;
-const SAMPLES_PER_PIXEL: i32 = 100;
+const IMAGE_WIDTH: i32 = 800;
+const SAMPLES_PER_PIXEL: i32 = 4;
 const NUM_THREADS: usize = 4;
 
 fn main() {

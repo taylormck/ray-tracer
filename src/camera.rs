@@ -8,6 +8,7 @@ use crate::scene::Scene;
 use rayon::prelude::*;
 
 use glm;
+use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
 use std::ops::Range;
 
@@ -79,13 +80,23 @@ impl Camera {
     pub fn render(self: &Self, scene: &Scene) {
         // Print the PPM header
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
+        eprintln!(
+            "Rendering {}x{} image...",
+            self.image_width, self.image_height
+        );
+
+        let mut progress = MappingBar::with_range(0, self.image_height).timed();
+        progress.set_len(20);
 
         let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
 
-        eprintln!("Rendering...");
-
         for j in 0..self.image_height {
-            // eprintln!("Scanlines remaining {}", IMAGE_HEIGHT - j);
+            progress.set(j);
+
+            if progress.has_progressed_significantly() {
+                progress.remember_significant_progress();
+                eprintln!("{}", progress);
+            }
 
             for i in 0..self.image_width {
                 let j = j as f64;
@@ -105,7 +116,7 @@ impl Camera {
             }
         }
 
-        eprintln!("Done rendering");
+        eprintln!("Done");
     }
 
     pub fn ray_color(self: &Self, r: &Ray, scene: &Scene) -> glm::DVec3 {

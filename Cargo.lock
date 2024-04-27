@@ -103,6 +103,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
 name = "libc"
 version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -216,6 +222,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "progress_bar"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94320ad982441d1294a56ba407d963c09fad89c70def47288603350b88cd6b94"
+dependencies = [
+ "lazy_static",
+]
+
+[[package]]
+name = "progressing"
+version = "3.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97b7db19a74ba7c34de36558abed080568491d2b8999a34de914b1793b0b4b1b"
+dependencies = [
+ "log 0.4.21",
+]
+
+[[package]]
 name = "quickcheck"
 version = "0.2.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -299,6 +323,8 @@ name = "ray-tracer-rust"
 version = "0.1.0"
 dependencies = [
  "glm",
+ "progress_bar",
+ "progressing",
  "rand 0.8.5",
  "rayon",
 ]

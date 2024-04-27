@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 glm = "0.2.3"
+progress_bar = "1.0.5"
+progressing = "3.0.2"
 rand = "0.8.5"
 rayon = "1.10.0"
