@@ -5,7 +5,7 @@ use crate::ray::Ray;
 use std::{ops::Range, sync::Arc};
 
 pub struct Scene {
-    objects: Vec<Arc<dyn HittableObject + Send + Sync>>,
+    objects: Vec<Arc<dyn HittableObject>>,
 }
 
 impl Scene {
@@ -13,7 +13,7 @@ impl Scene {
         Self { objects: vec![] }
     }
 
-    pub fn add(self: &mut Self, object: Arc<dyn HittableObject + Send + Sync>) {
+    pub fn add(self: &mut Self, object: Arc<dyn HittableObject>) {
         self.objects.push(object);
     }
 }

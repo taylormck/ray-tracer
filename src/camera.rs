@@ -1,7 +1,6 @@
 //! A module to manage the camera
 
 use crate::hittable::{HitRecord, HittableObject};
-use crate::pixel;
 use crate::ray::Ray;
 use crate::scene::Scene;
 
@@ -10,28 +9,28 @@ use rayon::prelude::*;
 use glm;
 use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
-use std::ops::Range;
+use std::{ops::Range, sync::Mutex, time};
 
 pub struct Camera {
     _aspect_ratio: f64,
-    image_width: i32,
-    image_height: i32,
+    image_width: usize,
+    image_height: usize,
     center: glm::DVec3,
     pixel00_location: glm::DVec3,
     pixel_delta_u: glm::DVec3,
     pixel_delta_v: glm::DVec3,
-    samples_per_pixel: i32,
+    samples_per_pixel: usize,
 }
 
 impl Camera {
     pub fn new(
         aspect_ratio: f64,
-        image_width: i32,
-        samples_per_pixel: i32,
+        image_width: usize,
+        samples_per_pixel: usize,
         _num_threads: usize,
     ) -> Self {
         // Set the camer's image_height to an int no lower than 1
-        let image_height = (image_width as f64 / aspect_ratio).floor() as i32;
+        let image_height = (image_width as f64 / aspect_ratio).floor() as usize;
         let image_height = std::cmp::max(image_height, 1);
 
         let center = glm::dvec3(0.0, 0.0, 0.0);
@@ -78,45 +77,83 @@ impl Camera {
     }
 
     pub fn render(self: &Self, scene: &Scene) {
-        // Print the PPM header
-        println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
-        eprintln!(
-            "Rendering {}x{} image...",
-            self.image_width, self.image_height
-        );
+        eprintln!("Rendering scene...");
 
-        let mut progress = MappingBar::with_range(0, self.image_height).timed();
-        progress.set_len(20);
+        let now = time::Instant::now();
 
         let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+        let num_pixels: usize = self.image_height * self.image_width;
 
-        for j in 0..self.image_height {
-            progress.set(j);
+        let mut progress = MappingBar::with_range(0, self.image_height * self.image_width).timed();
+        progress.set_len(20);
+
+        let progress = Mutex::new(progress);
+
+        let pixels: Vec<glm::Vector3<i32>> = (0..num_pixels)
+            .into_par_iter()
+            .map(|i| {
+                let row_index = (i / self.image_width) as f64;
+                let column_index = (i % self.image_width) as f64;
+
+                let mut color = (0..self.samples_per_pixel)
+                    // NOTE: uncomment this line to make it parallel
+                    // .into_par_iter()
+                    .map(|_| {
+                        let r = self.get_ray(column_index, row_index);
+                        self.ray_color(&r, &scene)
+                    })
+                    // NOTE: swap these reduce calls to make it parallel
+                    // .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |acc, a| acc + a)
+                    .reduce(|acc, a| acc + a)
+                    .unwrap()
+                    * pixel_samples_scale;
+
+                color = glm::dvec3(
+                    color.x.clamp(0.0, 0.999),
+                    color.y.clamp(0.0, 0.999),
+                    color.z.clamp(0.0, 0.999),
+                ) * 256.0;
+
+                let color = glm::ivec3(color.x as i32, color.y as i32, color.z as i32);
+
+                // Let's update the progress
+                let mut progress = progress.lock().unwrap();
+                progress.add(1_usize);
+
+                if progress.has_progressed_significantly() {
+                    progress.remember_significant_progress();
+                    eprintln!("{}", progress);
+                }
+
+                color
+            })
+            .collect();
+
+        eprintln!("Scene renderd in {}ms", now.elapsed().as_millis());
+
+        eprintln!("Saving data to image...");
+        let now = time::Instant::now();
+
+        let mut progress = MappingBar::with_range(0, num_pixels).timed();
+        progress.set_len(20);
+
+        // Print the PPM header
+        println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
+
+        // Print the PPM data
+        for pixel in pixels {
+            println!("{} {} {}", pixel.x, pixel.y, pixel.z);
+
+            progress.add(1_usize);
 
             if progress.has_progressed_significantly() {
                 progress.remember_significant_progress();
                 eprintln!("{}", progress);
-            }
-
-            for i in 0..self.image_width {
-                let j = j as f64;
-                let i = i as f64;
-
-                let color = (0..self.samples_per_pixel)
-                    .into_par_iter()
-                    .map(|_| {
-                        let r = self.get_ray(i, j);
-                        self.ray_color(&r, &scene)
-                    })
-                    .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |a, b| (a + b));
-
-                let color = color * pixel_samples_scale;
-
-                pixel::write_color(&color);
+                eprintln!("{}", progress);
             }
         }
 
-        eprintln!("Done");
+        eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
     pub fn ray_color(self: &Self, r: &Ray, scene: &Scene) -> glm::DVec3 {
