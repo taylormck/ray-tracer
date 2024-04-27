@@ -17,9 +17,10 @@ use std::rc::Rc;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: i32 = 800;
+const SAMPLES_PER_PIXEL: i32 = 10;
 
 fn main() {
-    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH);
+    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, SAMPLES_PER_PIXEL);
 
     let mut scene = Scene::new();
     scene.add(Rc::new(Sphere::new(glm::dvec3(0.0, 0.0, -1.0), 0.5)));

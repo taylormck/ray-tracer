@@ -5,8 +5,8 @@ use crate::pixel;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use glm;
+use rand::Rng;
 use std::ops::Range;
-
 pub struct Camera {
     _aspect_ratio: f64,
     image_width: i32,
@@ -15,10 +15,11 @@ pub struct Camera {
     pixel00_location: glm::DVec3,
     pixel_delta_u: glm::DVec3,
     pixel_delta_v: glm::DVec3,
+    samples_per_pixel: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: i32, samples_per_pixel: i32) -> Self {
         // Set the camer's image_height to an int no lower than 1
         let image_height = (image_width as f64 / aspect_ratio).floor() as i32;
         let image_height = std::cmp::max(image_height, 1);
@@ -53,12 +54,26 @@ impl Camera {
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
         }
+    }
+
+    fn get_ray(self: &Self, x: f64, y: f64) -> Ray {
+        let offset = sample_square();
+        let pixel_sample = self.pixel00_location
+            + (self.pixel_delta_u * (x + offset.x))
+            + (self.pixel_delta_v * (y + offset.y));
+
+        Ray::new(self.center, pixel_sample - self.center)
     }
 
     pub fn render(self: &Self, scene: Scene) {
         // Print the PPM header
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
+
+        let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+
+        eprintln!("Rendering...");
 
         for j in 0..self.image_height {
             // eprintln!("Scanlines remaining {}", IMAGE_HEIGHT - j);
@@ -67,12 +82,14 @@ impl Camera {
                 let j = j as f64;
                 let i = i as f64;
 
-                let pixel_center =
-                    self.pixel00_location + self.pixel_delta_u * i + self.pixel_delta_v * j;
+                let mut color = glm::dvec3(0.0, 0.0, 0.0);
 
-                let ray_direction = pixel_center - self.center;
-                let r = Ray::new(self.center, ray_direction);
-                let color = self.ray_color(&r, &scene);
+                for _ in 0..self.samples_per_pixel {
+                    let r = self.get_ray(i, j);
+                    color = color + self.ray_color(&r, &scene);
+                }
+
+                let color = color * pixel_samples_scale;
 
                 pixel::write_color(&color);
             }
@@ -98,4 +115,12 @@ impl Camera {
         let a = (unit_direction.y + 1.0) * 0.5;
         glm::dvec3(1.0, 1.0, 1.0) * (1.0 - a) + glm::dvec3(0.5, 0.7, 1.0) * a
     }
+}
+
+fn sample_square() -> glm::DVec3 {
+    let mut rng = rand::thread_rng();
+    let x: f64 = rng.gen();
+    let y: f64 = rng.gen();
+
+    glm::dvec3(x - 0.5, y - 0.5, 0.0)
 }
