@@ -16,8 +16,10 @@ impl Scene {
     pub fn add(self: &mut Self, object: Rc<dyn HittableObject>) {
         self.objects.push(object);
     }
+}
 
-    pub fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+impl HittableObject for Scene {
+    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let mut temp_record = HitRecord::new();
         let mut hit_anything = false;
         let mut range = range.clone();
