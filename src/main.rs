@@ -9,10 +9,11 @@ use std::sync::Arc;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
-const SAMPLES_PER_PIXEL: usize = 100;
+const SAMPLES_PER_PIXEL: usize = 10;
+const MAX_DEPTH: usize = 10;
 
 fn main() {
-    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, SAMPLES_PER_PIXEL);
+    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, SAMPLES_PER_PIXEL, MAX_DEPTH);
 
     let mut scene = Scene::new();
     scene.add(Arc::new(Sphere::new(glm::dvec3(0.0, 0.0, -1.0), 0.5)));

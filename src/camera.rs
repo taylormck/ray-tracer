@@ -19,10 +19,16 @@ pub struct Camera {
     pixel_delta_u: glm::DVec3,
     pixel_delta_v: glm::DVec3,
     samples_per_pixel: usize,
+    max_depth: usize,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: usize) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: usize,
+        samples_per_pixel: usize,
+        max_depth: usize,
+    ) -> Self {
         // Set the camer's image_height to an int no lower than 1
         let image_height = (image_width as f64 / aspect_ratio).floor() as usize;
         let image_height = std::cmp::max(image_height, 1);
@@ -57,6 +63,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
+            max_depth,
         }
     }
 
@@ -93,13 +100,19 @@ impl Camera {
                     // .into_par_iter()
                     .map(|_| {
                         let r = self.get_ray(column_index, row_index);
-                        self.ray_color(&r, &scene)
+                        self.ray_color(&r, &scene, self.max_depth)
                     })
                     // NOTE: swap these reduce calls to make it parallel
                     // .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |acc, a| acc + a)
                     .reduce(|acc, a| acc + a)
                     .unwrap()
                     * pixel_samples_scale;
+
+                color = glm::dvec3(
+                    f64::max(color.x, 0.0).sqrt(),
+                    f64::max(color.y, 0.0).sqrt(),
+                    f64::max(color.z, 0.0).sqrt(),
+                );
 
                 color = glm::dvec3(
                     color.x.clamp(0.0, 0.999),
@@ -149,16 +162,23 @@ impl Camera {
         eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
-    pub fn ray_color(self: &Self, r: &Ray, scene: &Scene) -> glm::DVec3 {
+    pub fn ray_color(self: &Self, r: &Ray, scene: &Scene, depth: usize) -> glm::DVec3 {
+        if depth <= 0 {
+            return glm::dvec3(0.0, 0.0, 0.0);
+        }
+
         let mut record = HitRecord::new();
 
         let range = Range {
-            start: 0.0,
+            start: 0.001,
             end: f64::INFINITY,
         };
 
         if scene.hit(r, &range, &mut record) {
-            return (record.normal + glm::dvec3(1.0, 1.0, 1.0)) * 0.5;
+            let direction = Ray::random_unit_sphere_vec() + record.normal;
+            let new_ray = Ray::new(record.point, direction);
+
+            return self.ray_color(&new_ray, scene, depth - 1) * 0.5;
         }
 
         // Sky background
