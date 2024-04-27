@@ -12,7 +12,6 @@ use rand::Rng;
 use std::{ops::Range, sync::Mutex, time};
 
 pub struct Camera {
-    _aspect_ratio: f64,
     image_width: usize,
     image_height: usize,
     center: glm::DVec3,
@@ -23,12 +22,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(
-        aspect_ratio: f64,
-        image_width: usize,
-        samples_per_pixel: usize,
-        _num_threads: usize,
-    ) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: usize) -> Self {
         // Set the camer's image_height to an int no lower than 1
         let image_height = (image_width as f64 / aspect_ratio).floor() as usize;
         let image_height = std::cmp::max(image_height, 1);
@@ -56,7 +50,6 @@ impl Camera {
         let pixel00_location = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         Self {
-            _aspect_ratio: aspect_ratio,
             image_width,
             image_height,
             center,
