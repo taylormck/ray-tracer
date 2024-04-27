@@ -4,9 +4,13 @@ use crate::hittable::{HitRecord, HittableObject};
 use crate::pixel;
 use crate::ray::Ray;
 use crate::scene::Scene;
+
+use rayon::prelude::*;
+
 use glm;
 use rand::Rng;
 use std::ops::Range;
+
 pub struct Camera {
     _aspect_ratio: f64,
     image_width: i32,
@@ -19,7 +23,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32, samples_per_pixel: i32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i32,
+        samples_per_pixel: i32,
+        _num_threads: usize,
+    ) -> Self {
         // Set the camer's image_height to an int no lower than 1
         let image_height = (image_width as f64 / aspect_ratio).floor() as i32;
         let image_height = std::cmp::max(image_height, 1);
@@ -67,7 +76,7 @@ impl Camera {
         Ray::new(self.center, pixel_sample - self.center)
     }
 
-    pub fn render(self: &Self, scene: Scene) {
+    pub fn render(self: &Self, scene: &Scene) {
         // Print the PPM header
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
 
@@ -82,12 +91,13 @@ impl Camera {
                 let j = j as f64;
                 let i = i as f64;
 
-                let mut color = glm::dvec3(0.0, 0.0, 0.0);
-
-                for _ in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    color = color + self.ray_color(&r, &scene);
-                }
+                let color = (0..self.samples_per_pixel)
+                    .into_par_iter()
+                    .map(|_| {
+                        let r = self.get_ray(i, j);
+                        self.ray_color(&r, &scene)
+                    })
+                    .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |a, b| (a + b));
 
                 let color = color * pixel_samples_scale;
 

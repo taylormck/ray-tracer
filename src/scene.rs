@@ -2,10 +2,10 @@
 
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
-use std::{ops::Range, rc::Rc};
+use std::{ops::Range, sync::Arc};
 
 pub struct Scene {
-    objects: Vec<Rc<dyn HittableObject>>,
+    objects: Vec<Arc<dyn HittableObject + Send + Sync>>,
 }
 
 impl Scene {
@@ -13,7 +13,7 @@ impl Scene {
         Self { objects: vec![] }
     }
 
-    pub fn add(self: &mut Self, object: Rc<dyn HittableObject>) {
+    pub fn add(self: &mut Self, object: Arc<dyn HittableObject + Send + Sync>) {
         self.objects.push(object);
     }
 }
