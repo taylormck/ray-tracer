@@ -78,14 +78,14 @@ fn main() {
                         let albedo = Ray::random_vec(0.0..1.0) * Ray::random_vec(0.0..1.0);
                         Arc::new(Lambertian::new(albedo))
                     }
-                    choose_mat if choose_mat < 0.95 => {
+                    choose_mat if choose_mat < 0.9 => {
                         let albedo = Ray::random_vec(0.5..1.0);
                         let fuzz: f64 = rng.gen_range(0.0..0.5);
                         Arc::new(Metal::new(albedo, fuzz))
                     }
                     _ => {
-                        let albedo = Ray::random_vec(0.5..1.0);
-                        let opacity = rng.gen();
+                        let albedo = glm::dvec3(1.0, 1.0, 1.0);
+                        let opacity = 0.0;
                         Arc::new(Dielectric::new(albedo, opacity, refraction_indices::GLASS))
                     }
                 };
