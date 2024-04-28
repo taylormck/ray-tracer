@@ -1,18 +1,25 @@
 //! A definition for a sphere
 
 use crate::hittable::{HitRecord, HittableObject};
+use crate::material::Material;
 use crate::ray::Ray;
 use glm;
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 
+#[derive(Clone)]
 pub struct Sphere {
     center: glm::DVec3,
     radius: f64,
+    material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: glm::DVec3, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: glm::DVec3, radius: f64, material: Arc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -54,6 +61,7 @@ impl HittableObject for Sphere {
 
         record.t = root;
         record.point = r.at(record.t);
+        record.mat = self.material.clone();
 
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_normal(r, &outward_normal);

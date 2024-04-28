@@ -20,7 +20,7 @@ impl Scene {
 
 impl HittableObject for Scene {
     fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
-        let mut temp_record = HitRecord::new();
+        let mut temp_record = HitRecord::new(ray.direction());
         let mut hit_anything = false;
         let mut range = range.clone();
 

@@ -56,4 +56,10 @@ impl Ray {
 
         unit_sphere_vec
     }
+
+    pub fn is_vec_near_zero(v: &glm::DVec3) -> bool {
+        static EPSILON: f64 = 0.00000001;
+        static RANGE: Range<f64> = 0.0..EPSILON;
+        RANGE.contains(&v.x) && RANGE.contains(&v.y) && RANGE.contains(&v.z)
+    }
 }

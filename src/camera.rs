@@ -11,6 +11,7 @@ use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
 use std::{ops::Range, sync::Mutex, time};
 
+#[derive(Debug, Copy, Clone)]
 pub struct Camera {
     image_width: usize,
     image_height: usize,
@@ -167,7 +168,7 @@ impl Camera {
             return glm::dvec3(0.0, 0.0, 0.0);
         }
 
-        let mut record = HitRecord::new();
+        let mut record = HitRecord::new(r.direction());
 
         let range = Range {
             start: 0.001,
@@ -175,10 +176,15 @@ impl Camera {
         };
 
         if scene.hit(r, &range, &mut record) {
-            let direction = Ray::random_unit_sphere_vec() + record.normal;
-            let new_ray = Ray::new(record.point, direction);
+            let mut scattered = Ray::new(glm::dvec3(0.0, 0.0, 0.0), glm::dvec3(0.0, 0.0, 0.0));
+            let mut attenuation = glm::dvec3(0.0, 0.0, 0.0);
+            let mat = record.mat.clone();
 
-            return self.ray_color(&new_ray, scene, depth - 1) * 0.5;
+            if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
+                return self.ray_color(&scattered, scene, depth - 1) * attenuation;
+            }
+
+            return glm::dvec3(0.0, 0.0, 0.0);
         }
 
         // Sky background

@@ -3,6 +3,7 @@
 //! brush up on graphics programming in general.
 use glm;
 use ray_tracer_rust::camera::Camera;
+use ray_tracer_rust::material::{Lambertian, Metal};
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
@@ -16,9 +17,39 @@ fn main() {
     let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, SAMPLES_PER_PIXEL, MAX_DEPTH);
 
     let mut scene = Scene::new();
-    scene.add(Arc::new(Sphere::new(glm::dvec3(0.0, 0.0, -1.0), 0.5)));
-    scene.add(Arc::new(Sphere::new(glm::dvec3(1.5, 0.5, -2.0), 0.25)));
-    scene.add(Arc::new(Sphere::new(glm::dvec3(0.0, -100.5, -1.0), 100.0)));
+
+    let material_ground = Arc::new(Lambertian::new(glm::dvec3(0.8, 0.8, 0.0)));
+    let material_center = Arc::new(Lambertian::new(glm::dvec3(0.1, 0.2, 0.5)));
+    let material_left = Arc::new(Metal::new(glm::dvec3(0.8, 0.8, 0.8)));
+    let material_right = Arc::new(Metal::new(glm::dvec3(0.8, 0.6, 0.2)));
+
+    // Ground
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+
+    // Central ball
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(0.0, 0.0, -1.2),
+        0.5,
+        material_center,
+    )));
+
+    // Right ball
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
+
+    // Left ball
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
 
     camera.render(&scene);
 }
