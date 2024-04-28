@@ -9,9 +9,9 @@ use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
 
 const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
-    x: -1.0,
-    y: 1.0,
-    z: 0.5,
+    x: -2.0,
+    y: 0.5,
+    z: 1.25,
 };
 
 const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
@@ -30,7 +30,9 @@ const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
 const SAMPLES_PER_PIXEL: usize = 10;
 const MAX_DEPTH: usize = 10;
-const FOV: f64 = 75.0;
+const FOV: f64 = 20.0;
+const DEFOCUS_ANGLE: f64 = 0.5;
+const FOCUS_DIST: f64 = 2.4;
 
 fn main() {
     let camera = Camera::new(
@@ -40,6 +42,8 @@ fn main() {
         ASPECT_RATIO,
         IMAGE_WIDTH,
         FOV,
+        DEFOCUS_ANGLE,
+        FOCUS_DIST,
         SAMPLES_PER_PIXEL,
         MAX_DEPTH,
     );

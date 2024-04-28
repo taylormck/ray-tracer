@@ -18,9 +18,13 @@ pub struct Camera {
     samples_per_pixel: usize,
     position: glm::DVec3,
     max_depth: usize,
+    pixel_samples_scale: f64,
     pixel00_location: glm::DVec3,
     pixel_delta_u: glm::DVec3,
     pixel_delta_v: glm::DVec3,
+    defocus_angle: f64,
+    defocus_disk_u: glm::DVec3,
+    defocus_disk_v: glm::DVec3,
 }
 
 impl Camera {
@@ -31,6 +35,8 @@ impl Camera {
         aspect_ratio: f64,
         image_width: usize,
         fov: f64,
+        defocus_angle: f64,
+        focus_dist: f64,
         samples_per_pixel: usize,
         max_depth: usize,
     ) -> Self {
@@ -39,10 +45,9 @@ impl Camera {
         let image_height = std::cmp::max(image_height, 1);
 
         // Set viewport dimensions
-        let focal_length = glm::length(position - target_position);
         let theta = fov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * focus_dist;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
         let w = glm::normalize(position - target_position);
@@ -59,20 +64,28 @@ impl Camera {
 
         // Get the upper left corner in viewport space
         let viewport_upper_left =
-            position - w * focal_length - (viewport_u / 2.0) - (viewport_v / 2.0);
+            position - w * focus_dist - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         // Set the top left pixel location
         let pixel00_location = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
+
+        let defocus_radius = focus_dist * (defocus_angle / 2.0).to_radians().tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
 
         Self {
             image_width,
             image_height,
             position,
+            pixel_samples_scale: 1.0 / samples_per_pixel as f64,
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
             max_depth,
+            defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -82,7 +95,12 @@ impl Camera {
             + (self.pixel_delta_u * (x + offset.x))
             + (self.pixel_delta_v * (y + offset.y));
 
-        Ray::new(self.position, pixel_sample - self.position)
+        let ray_origin = match self.defocus_angle <= 0.0 {
+            true => self.position,
+            false => self.defocus_disk_sample(),
+        };
+
+        Ray::new(ray_origin, pixel_sample - ray_origin)
     }
 
     pub fn render(self: &Self, scene: &Scene) {
@@ -90,7 +108,6 @@ impl Camera {
 
         let now = time::Instant::now();
 
-        let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
         let num_pixels: usize = self.image_height * self.image_width;
 
         let mut progress = MappingBar::with_range(0, self.image_height * self.image_width).timed();
@@ -115,7 +132,7 @@ impl Camera {
                     // .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |acc, a| acc + a)
                     .reduce(|acc, a| acc + a)
                     .unwrap()
-                    * pixel_samples_scale;
+                    * self.pixel_samples_scale;
 
                 color = glm::dvec3(
                     f64::max(color.x, 0.0).sqrt(),
@@ -199,6 +216,11 @@ impl Camera {
         let unit_direction = glm::normalize(r.direction());
         let a = (unit_direction.y + 1.0) * 0.5;
         glm::dvec3(1.0, 1.0, 1.0) * (1.0 - a) + glm::dvec3(0.5, 0.7, 1.0) * a
+    }
+
+    fn defocus_disk_sample(self: &Self) -> glm::DVec3 {
+        let p = Ray::random_unit_disk_vec();
+        self.position + self.defocus_disk_u * p.x + self.defocus_disk_v * p.y
     }
 }
 

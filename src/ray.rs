@@ -47,7 +47,7 @@ impl Ray {
         }
     }
 
-    pub fn random_hemisphere_vec(normal: glm::DVec3) -> glm::DVec3 {
+    pub fn random_unit_hemisphere_vec(normal: glm::DVec3) -> glm::DVec3 {
         let mut unit_sphere_vec = Self::random_unit_sphere_vec();
 
         if glm::dot(unit_sphere_vec, normal) < 0.0 {
@@ -55,6 +55,18 @@ impl Ray {
         }
 
         unit_sphere_vec
+    }
+
+    pub fn random_unit_disk_vec() -> glm::DVec3 {
+        // TODO: there is almost certainly a better way to do this
+        loop {
+            let mut attempt = Self::random_vec(-1.0..1.0);
+            attempt.z = 0.0;
+
+            if glm::ext::sqlength(attempt) < 1.0 {
+                return attempt;
+            }
+        }
     }
 
     pub fn is_vec_near_zero(v: &glm::DVec3) -> bool {
