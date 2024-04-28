@@ -1,13 +1,13 @@
 //! A simple raytracer in Rust
 //! I'm building this both to practice Rust and to
 //! brush up on graphics programming in general.
-use glm;
+
 use rand::Rng;
 use ray_tracer_rust::camera::Camera;
 use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
-use ray_tracer_rust::ray::Ray;
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
+use ray_tracer_rust::vector;
 use std::sync::Arc;
 
 const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
@@ -75,11 +75,11 @@ fn main() {
             if glm::ext::sqlength(center - glm::dvec3(4.0, 0.2, 0.0)) > 0.81 {
                 let sphere_material: Arc<dyn Material> = match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
-                        let albedo = Ray::random_vec(0.0..1.0) * Ray::random_vec(0.0..1.0);
+                        let albedo = vector::random_vec(0.0..1.0) * vector::random_vec(0.0..1.0);
                         Arc::new(Lambertian::new(albedo))
                     }
                     choose_mat if choose_mat < 0.9 => {
-                        let albedo = Ray::random_vec(0.5..1.0);
+                        let albedo = vector::random_vec(0.5..1.0);
                         let fuzz: f64 = rng.gen_range(0.0..0.5);
                         Arc::new(Metal::new(albedo, fuzz))
                     }

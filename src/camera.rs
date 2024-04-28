@@ -3,10 +3,11 @@
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
 use crate::scene::Scene;
+use crate::vector;
+use crate::vector::{Color, Vec3};
 
 use rayon::prelude::*;
 
-use glm;
 use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
 use std::{ops::Range, sync::Mutex, time};
@@ -115,59 +116,26 @@ impl Camera {
 
         let progress = Mutex::new(progress);
 
-        let pixels: Vec<glm::Vector3<i32>> = (0..num_pixels)
+        let update_progress = || {
+            let mut progress = progress.lock().unwrap();
+            progress.add(1_usize);
+
+            if progress.has_progressed_significantly() {
+                progress.remember_significant_progress();
+                eprintln!("{}", progress);
+            }
+        };
+
+        let pixels: Vec<Color> = (0..num_pixels)
             .into_par_iter()
-            .map(|i| {
-                let row_index = (i / self.image_width) as f64;
-                let column_index = (i % self.image_width) as f64;
-
-                let mut color = (0..self.samples_per_pixel)
-                    // NOTE: uncomment this line to make it parallel
-                    // .into_par_iter()
-                    .map(|_| {
-                        let r = self.get_ray(column_index, row_index);
-                        self.ray_color(&r, &scene, self.max_depth)
-                    })
-                    // NOTE: swap these reduce calls to make it parallel
-                    // .reduce(|| glm::dvec3(0.0, 0.0, 0.0), |acc, a| acc + a)
-                    .reduce(|acc, a| acc + a)
-                    .unwrap()
-                    * self.pixel_samples_scale;
-
-                color = glm::dvec3(
-                    f64::max(color.x, 0.0).sqrt(),
-                    f64::max(color.y, 0.0).sqrt(),
-                    f64::max(color.z, 0.0).sqrt(),
-                );
-
-                color = glm::dvec3(
-                    color.x.clamp(0.0, 0.999),
-                    color.y.clamp(0.0, 0.999),
-                    color.z.clamp(0.0, 0.999),
-                ) * 256.0;
-
-                let color = glm::ivec3(color.x as i32, color.y as i32, color.z as i32);
-
-                // Let's update the progress
-                let mut progress = progress.lock().unwrap();
-                progress.add(1_usize);
-
-                if progress.has_progressed_significantly() {
-                    progress.remember_significant_progress();
-                    eprintln!("{}", progress);
-                }
-
+            .map(|i| self.get_pixel_color(scene, i))
+            .map(|color| {
+                update_progress();
                 color
             })
             .collect();
 
         eprintln!("Scene renderd in {}ms", now.elapsed().as_millis());
-
-        eprintln!("Saving data to image...");
-        let now = time::Instant::now();
-
-        let mut progress = MappingBar::with_range(0, num_pixels).timed();
-        progress.set_len(20);
 
         // Print the PPM header
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
@@ -175,20 +143,30 @@ impl Camera {
         // Print the PPM data
         for pixel in pixels {
             println!("{} {} {}", pixel.x, pixel.y, pixel.z);
-
-            progress.add(1_usize);
-
-            if progress.has_progressed_significantly() {
-                progress.remember_significant_progress();
-                eprintln!("{}", progress);
-                eprintln!("{}", progress);
-            }
         }
 
         eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
-    pub fn ray_color(self: &Self, r: &Ray, scene: &Scene, depth: usize) -> glm::DVec3 {
+    pub fn get_pixel_color(self: &Self, scene: &Scene, i: usize) -> Color {
+        let row_index = (i / self.image_width) as f64;
+        let column_index = (i % self.image_width) as f64;
+
+        let mut color = (0..self.samples_per_pixel)
+            .map(|_| self.get_ray(column_index, row_index))
+            .map(|r| self.ray_color(&r, &scene, self.max_depth))
+            .reduce(|acc, a| acc + a)
+            .unwrap()
+            * self.pixel_samples_scale;
+
+        // Use sqrt for gamma correction
+        color = vector::sqrt_vec(&color);
+        color = vector::clamp_vec(&color, 0.0..0.999) * 256.0;
+
+        vector::vec3_to_color(&color)
+    }
+
+    pub fn ray_color(self: &Self, r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
         if depth <= 0 {
             return glm::dvec3(0.0, 0.0, 0.0);
         }
@@ -201,8 +179,8 @@ impl Camera {
         };
 
         if scene.hit(r, &range, &mut record) {
-            let mut scattered = Ray::new(glm::dvec3(0.0, 0.0, 0.0), glm::dvec3(0.0, 0.0, 0.0));
-            let mut attenuation = glm::dvec3(0.0, 0.0, 0.0);
+            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+            let mut attenuation = Vec3::new(0.0, 0.0, 0.0);
             let mat = record.mat.clone();
 
             if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
@@ -219,7 +197,7 @@ impl Camera {
     }
 
     fn defocus_disk_sample(self: &Self) -> glm::DVec3 {
-        let p = Ray::random_unit_disk_vec();
+        let p = vector::random_unit_disk_vec();
         self.position + self.defocus_disk_u * p.x + self.defocus_disk_v * p.y
     }
 }

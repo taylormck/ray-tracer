@@ -1,13 +1,14 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use glm;
+use crate::vector;
+use crate::vector::Vec3;
 use rand::Rng;
 
 pub trait Material: Send + Sync {
     fn scatter(
         self: &Self,
         record: &mut HitRecord,
-        attenuation: &mut glm::DVec3,
+        attenuation: &mut Vec3,
         scattered: &mut Ray,
     ) -> bool;
 }
@@ -19,7 +20,7 @@ impl Material for DebugMaterial {
     fn scatter(
         self: &Self,
         _record: &mut HitRecord,
-        _attenuation: &mut glm::DVec3,
+        _attenuation: &mut Vec3,
         _scattered: &mut Ray,
     ) -> bool {
         false
@@ -28,11 +29,11 @@ impl Material for DebugMaterial {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Lambertian {
-    albedo: glm::DVec3,
+    albedo: Vec3,
 }
 
 impl Lambertian {
-    pub fn new(albedo: glm::DVec3) -> Self {
+    pub fn new(albedo: Vec3) -> Self {
         Self { albedo }
     }
 }
@@ -41,15 +42,15 @@ impl Material for Lambertian {
     fn scatter(
         self: &Self,
         record: &mut HitRecord,
-        attenuation: &mut glm::DVec3,
+        attenuation: &mut Vec3,
         scattered: &mut Ray,
     ) -> bool {
         // NOTE: We choose to always scatter here
         // We may want to change the material to absorb some amount
         // of the incoming light.
-        let mut scatter_direction = record.normal + Ray::random_unit_sphere_vec();
+        let mut scatter_direction = record.normal + vector::random_unit_sphere_vec();
 
-        if Ray::is_vec_near_zero(&scatter_direction) {
+        if vector::is_vec_near_zero(&scatter_direction) {
             scatter_direction = record.normal;
         }
 
@@ -84,7 +85,7 @@ impl Material for Metal {
     ) -> bool {
         let mut reflected_direction = glm::reflect(record.in_vec, record.normal);
         reflected_direction = glm::normalize(reflected_direction);
-        reflected_direction = reflected_direction + Ray::random_unit_sphere_vec() * self.fuzz;
+        reflected_direction = reflected_direction + vector::random_unit_sphere_vec() * self.fuzz;
 
         *scattered = Ray::new(record.point, reflected_direction);
         *attenuation = self.albedo;

@@ -1,16 +1,13 @@
 //! A definition for a ray
 
-use glm;
-use rand::Rng;
-use std::ops::Range;
-
+use crate::vector::Vec3;
 pub struct Ray {
-    origin: glm::DVec3,
-    direction: glm::DVec3,
+    origin: Vec3,
+    direction: Vec3,
 }
 
 impl Ray {
-    pub fn new(origin: glm::DVec3, direction: glm::DVec3) -> Ray {
+    pub fn new(origin: glm::DVec3, direction: Vec3) -> Ray {
         Self { origin, direction }
     }
 
@@ -24,54 +21,5 @@ impl Ray {
 
     pub fn direction(&self) -> glm::DVec3 {
         self.direction
-    }
-
-    pub fn random_vec(range: Range<f64>) -> glm::DVec3 {
-        let mut rng = rand::thread_rng();
-
-        glm::dvec3(
-            rng.gen_range(range.clone()),
-            rng.gen_range(range.clone()),
-            rng.gen_range(range.clone()),
-        )
-    }
-
-    pub fn random_unit_sphere_vec() -> glm::DVec3 {
-        // TODO: there is almost certainly a better way to do this
-        loop {
-            let attempt = Self::random_vec(-1.0..1.0);
-
-            if glm::ext::sqlength(attempt) < 1.0 {
-                return glm::normalize(attempt);
-            }
-        }
-    }
-
-    pub fn random_unit_hemisphere_vec(normal: glm::DVec3) -> glm::DVec3 {
-        let mut unit_sphere_vec = Self::random_unit_sphere_vec();
-
-        if glm::dot(unit_sphere_vec, normal) < 0.0 {
-            unit_sphere_vec = -unit_sphere_vec;
-        }
-
-        unit_sphere_vec
-    }
-
-    pub fn random_unit_disk_vec() -> glm::DVec3 {
-        // TODO: there is almost certainly a better way to do this
-        loop {
-            let mut attempt = Self::random_vec(-1.0..1.0);
-            attempt.z = 0.0;
-
-            if glm::ext::sqlength(attempt) < 1.0 {
-                return attempt;
-            }
-        }
-    }
-
-    pub fn is_vec_near_zero(v: &glm::DVec3) -> bool {
-        static EPSILON: f64 = 0.00000001;
-        static RANGE: Range<f64> = 0.0..EPSILON;
-        RANGE.contains(&v.x) && RANGE.contains(&v.y) && RANGE.contains(&v.z)
     }
 }
