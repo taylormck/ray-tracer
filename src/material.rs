@@ -62,11 +62,15 @@ impl Material for Lambertian {
 #[derive(Debug, Copy, Clone)]
 pub struct Metal {
     albedo: glm::DVec3,
+    fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: glm::DVec3) -> Self {
-        Self { albedo }
+    pub fn new(albedo: glm::DVec3, fuzz: f64) -> Self {
+        Self {
+            albedo,
+            fuzz: f64::min(fuzz, 1.0),
+        }
     }
 }
 
@@ -77,9 +81,13 @@ impl Material for Metal {
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,
     ) -> bool {
-        let reflected_direction = glm::reflect(record.in_vec, record.normal);
+        let mut reflected_direction = glm::reflect(record.in_vec, record.normal);
+        reflected_direction = glm::normalize(reflected_direction);
+        reflected_direction = reflected_direction + Ray::random_unit_sphere_vec() * self.fuzz;
+
         *scattered = Ray::new(record.point, reflected_direction);
         *attenuation = self.albedo;
-        true
+
+        glm::dot(reflected_direction, record.normal) > 0.0
     }
 }
