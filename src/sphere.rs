@@ -1,5 +1,6 @@
 //! A definition for a sphere
 
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, HittableObject};
 use crate::material::Material;
 use crate::ray::Ray;
@@ -13,15 +14,34 @@ pub struct Sphere {
     velocity: Vec3,
     radius: f64,
     material: Arc<dyn Material>,
+    aabb: AABB,
 }
 
 impl Sphere {
     pub fn new(center: Vec3, velocity: Vec3, radius: f64, material: Arc<dyn Material>) -> Self {
+        let end_point = center + velocity;
+
+        let aabb = AABB::new(
+            Range {
+                start: f64::min(center.x - radius, center.x + radius),
+                end: f64::max(end_point.x - radius, end_point.x + radius),
+            },
+            Range {
+                start: f64::min(center.y - radius, center.y + radius),
+                end: f64::max(end_point.y - radius, end_point.y + radius),
+            },
+            Range {
+                start: f64::min(center.z - radius, center.z + radius),
+                end: f64::max(end_point.z - radius, end_point.z + radius),
+            },
+        );
+
         Self {
             center,
             velocity,
             radius,
             material,
+            aabb,
         }
     }
 }
@@ -70,5 +90,9 @@ impl HittableObject for Sphere {
         record.set_normal(r, &outward_normal);
 
         true
+    }
+
+    fn bounding_box(self: &Self) -> &AABB {
+        &self.aabb
     }
 }

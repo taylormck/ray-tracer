@@ -1,5 +1,6 @@
 //! A struct to describe hittable objects in a scene
 
+use crate::aabb::AABB;
 use crate::material::{DebugMaterial, Material};
 use crate::ray::Ray;
 use crate::vector;
@@ -41,4 +42,5 @@ impl HitRecord {
 
 pub trait HittableObject: Send + Sync {
     fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool;
+    fn bounding_box(self: &Self) -> &AABB;
 }

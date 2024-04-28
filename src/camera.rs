@@ -2,7 +2,6 @@
 
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
-use crate::scene::Scene;
 use crate::vector;
 use crate::vector::{Color, Vec3};
 
@@ -108,7 +107,7 @@ impl Camera {
         Ray::new(ray_origin, pixel_sample - ray_origin, ray_time)
     }
 
-    pub fn render(self: &Self, scene: &Scene) {
+    pub fn render(self: &Self, hittable: &dyn HittableObject) {
         eprintln!("Rendering scene...");
 
         let now = time::Instant::now();
@@ -132,7 +131,7 @@ impl Camera {
 
         let pixels: Vec<Color> = (0..num_pixels)
             .into_par_iter()
-            .map(|i| self.get_pixel_color(scene, i))
+            .map(|i| self.get_pixel_color(hittable, i))
             .map(|color| {
                 update_progress();
                 color
@@ -152,13 +151,13 @@ impl Camera {
         eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
-    pub fn get_pixel_color(self: &Self, scene: &Scene, i: usize) -> Color {
+    pub fn get_pixel_color(self: &Self, hittable: &dyn HittableObject, i: usize) -> Color {
         let row_index = (i / self.image_width) as f64;
         let column_index = (i % self.image_width) as f64;
 
         let mut color = (0..self.samples_per_pixel)
             .map(|_| self.get_ray(column_index, row_index))
-            .map(|r| self.ray_color(&r, &scene, self.max_depth))
+            .map(|r| self.ray_color(&r, hittable, self.max_depth))
             .reduce(|acc, a| acc + a)
             .unwrap()
             * self.pixel_samples_scale;
@@ -170,7 +169,7 @@ impl Camera {
         vector::vec3_to_color(&color)
     }
 
-    pub fn ray_color(self: &Self, r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
+    pub fn ray_color(self: &Self, r: &Ray, hittable: &dyn HittableObject, depth: usize) -> Vec3 {
         if depth <= 0 {
             return vector::zero_vec();
         }
@@ -182,13 +181,13 @@ impl Camera {
             end: f64::INFINITY,
         };
 
-        if scene.hit(r, &range, &mut record) {
+        if hittable.hit(r, &range, &mut record) {
             let mut scattered = Ray::new(vector::zero_vec(), vector::zero_vec(), r.time());
             let mut attenuation = vector::zero_vec();
             let mat = record.mat.clone();
 
             if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
-                return self.ray_color(&scattered, scene, depth - 1) * attenuation;
+                return self.ray_color(&scattered, hittable, depth - 1) * attenuation;
             }
 
             return vector::zero_vec();

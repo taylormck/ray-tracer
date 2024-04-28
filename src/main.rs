@@ -3,6 +3,7 @@
 //! brush up on graphics programming in general.
 
 use rand::Rng;
+use ray_tracer_rust::bvh::BVHNode;
 use ray_tracer_rust::camera::Camera;
 use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
 use ray_tracer_rust::scene::Scene;
@@ -31,8 +32,8 @@ const CAMERA_UP: glm::DVec3 = glm::DVec3 {
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
-const SAMPLES_PER_PIXEL: usize = 10;
-const MAX_DEPTH: usize = 10;
+const SAMPLES_PER_PIXEL: usize = 100;
+const MAX_DEPTH: usize = 20;
 const FOV: f64 = 20.0;
 const DEFOCUS_ANGLE: f64 = 0.6;
 const FOCUS_DIST: f64 = 10.0;
@@ -137,5 +138,7 @@ fn main() {
         material3,
     )));
 
-    camera.render(&scene);
+    let tree = BVHNode::from(scene.objects());
+
+    camera.render(&tree);
 }

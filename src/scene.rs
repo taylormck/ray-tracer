@@ -1,20 +1,34 @@
 //! A definition for a scene full of objects to render
 
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
 use std::{ops::Range, sync::Arc};
 
 pub struct Scene {
     objects: Vec<Arc<dyn HittableObject>>,
+    aabb: AABB,
 }
 
 impl Scene {
     pub fn new() -> Self {
-        Self { objects: vec![] }
+        Self {
+            objects: vec![],
+            aabb: AABB::new_empty(),
+        }
     }
 
     pub fn add(self: &mut Self, object: Arc<dyn HittableObject>) {
+        // We need to make a copy of the bounding box here to make
+        // the borrow checker happy.
+        let object_aabb = object.bounding_box().clone();
+
         self.objects.push(object);
+        self.aabb = AABB::combine_bounds(&self.aabb, &object_aabb);
+    }
+
+    pub fn objects(self: &Self) -> Vec<Arc<dyn HittableObject>> {
+        self.objects.clone()
     }
 }
 
@@ -35,5 +49,9 @@ impl HittableObject for Scene {
         }
 
         hit_anything
+    }
+
+    fn bounding_box(self: &Self) -> &AABB {
+        &self.aabb
     }
 }
