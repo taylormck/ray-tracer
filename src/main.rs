@@ -55,20 +55,20 @@ fn main() {
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(-0.175, -0.075, -0.4),
-        0.05,
+        glm::dvec3(-0.25, -0.1, -0.4),
+        0.1,
         material_glass_blue,
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.125, -0.1, -0.3),
+        glm::dvec3(0.25, -0.15, -0.4),
         0.2,
         material_glass_clear,
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.1, 0.25, -0.5),
-        0.3,
+        glm::dvec3(0.2, 0.3, -0.5),
+        0.2,
         material_glass_red,
     )));
 

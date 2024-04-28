@@ -120,9 +120,16 @@ impl Material for Dielectric {
         };
 
         let unit_direction = glm::normalize(record.in_vec);
-        let refracted = glm::refract(unit_direction, record.normal, ri);
 
-        *scattered = Ray::new(record.point, refracted);
+        let cos_theta = f64::min(glm::dot(-unit_direction, record.normal), 1.0);
+        let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
+
+        let direction = match ri * sin_theta > 1.0 {
+            true => glm::reflect(unit_direction, record.normal),
+            false => glm::refract(unit_direction, record.normal, ri),
+        };
+
+        *scattered = Ray::new(record.point, direction);
         *attenuation = self.albedo;
 
         true
