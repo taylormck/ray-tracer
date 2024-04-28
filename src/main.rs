@@ -3,7 +3,7 @@
 //! brush up on graphics programming in general.
 use glm;
 use ray_tracer_rust::camera::Camera;
-use ray_tracer_rust::material::{Lambertian, Metal};
+use ray_tracer_rust::material::{Dielectric, Lambertian, Metal};
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
@@ -22,6 +22,8 @@ fn main() {
     let material_center = Arc::new(Lambertian::new(glm::dvec3(0.1, 0.2, 0.5)));
     let material_left = Arc::new(Metal::new(glm::dvec3(0.8, 0.8, 0.8), 0.3));
     let material_right = Arc::new(Metal::new(glm::dvec3(0.8, 0.6, 0.2), 1.0));
+    let material_glass_blue = Arc::new(Dielectric::new(glm::dvec3(1.0, 1.0, 1.0), 2.0));
+    let material_glass_clear = Arc::new(Dielectric::new(glm::dvec3(0.2, 0.4, 0.9), 5.0));
 
     // Ground
     scene.add(Arc::new(Sphere::new(
@@ -49,6 +51,18 @@ fn main() {
         glm::dvec3(-1.0, 0.0, -1.0),
         0.5,
         material_left,
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(-0.175, -0.075, -0.4),
+        0.05,
+        material_glass_blue,
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(0.125, -0.1, -0.5),
+        0.2,
+        material_glass_clear,
     )));
 
     camera.render(&scene);

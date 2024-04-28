@@ -91,3 +91,40 @@ impl Material for Metal {
         glm::dot(reflected_direction, record.normal) > 0.0
     }
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct Dielectric {
+    albedo: glm::DVec3,
+    refraction_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(albedo: glm::DVec3, refraction_index: f64) -> Self {
+        Self {
+            albedo,
+            refraction_index,
+        }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(
+        self: &Self,
+        record: &mut HitRecord,
+        attenuation: &mut glm::DVec3,
+        scattered: &mut Ray,
+    ) -> bool {
+        let ri: f64 = match record.front_face {
+            true => self.refraction_index.recip(),
+            false => self.refraction_index,
+        };
+
+        let unit_direction = glm::normalize(record.in_vec);
+        let refracted = glm::refract(unit_direction, record.normal, ri);
+
+        *scattered = Ray::new(record.point, refracted);
+        *attenuation = self.albedo;
+
+        true
+    }
+}
