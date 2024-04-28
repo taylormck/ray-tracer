@@ -2,22 +2,24 @@
 //! I'm building this both to practice Rust and to
 //! brush up on graphics programming in general.
 use glm;
+use rand::Rng;
 use ray_tracer_rust::camera::Camera;
-use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Metal};
+use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
+use ray_tracer_rust::ray::Ray;
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
 
 const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
-    x: -2.0,
-    y: 0.5,
-    z: 1.25,
+    x: 13.0,
+    y: 2.0,
+    z: 3.0,
 };
 
 const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
     x: 0.0,
     y: 0.0,
-    z: -1.0,
+    z: 0.0,
 };
 
 const CAMERA_UP: glm::DVec3 = glm::DVec3 {
@@ -31,10 +33,12 @@ const IMAGE_WIDTH: usize = 800;
 const SAMPLES_PER_PIXEL: usize = 10;
 const MAX_DEPTH: usize = 10;
 const FOV: f64 = 20.0;
-const DEFOCUS_ANGLE: f64 = 0.5;
-const FOCUS_DIST: f64 = 2.4;
+const DEFOCUS_ANGLE: f64 = 0.6;
+const FOCUS_DIST: f64 = 10.0;
 
 fn main() {
+    let mut rng = rand::thread_rng();
+
     let camera = Camera::new(
         CAMERA_POSITION,
         CAMERA_TARGET,
@@ -50,85 +54,73 @@ fn main() {
 
     let mut scene = Scene::new();
 
-    let material_ground = Arc::new(Lambertian::new(glm::dvec3(0.8, 0.8, 0.0)));
-    let material_center = Arc::new(Lambertian::new(glm::dvec3(0.1, 0.2, 0.5)));
-    let material_left = Arc::new(Metal::new(glm::dvec3(0.8, 0.8, 0.8), 0.3));
-    let material_right = Arc::new(Metal::new(glm::dvec3(0.8, 0.6, 0.2), 1.0));
-
-    let material_glass_blue = Arc::new(Dielectric::new(
-        glm::dvec3(0.2, 0.4, 0.9),
-        0.2,
-        refraction_indices::GLASS / refraction_indices::WATER,
-    ));
-
-    let material_glass_red = Arc::new(Dielectric::new(
-        glm::dvec3(0.8, 0.2, 0.1),
-        0.5,
-        refraction_indices::AIR / refraction_indices::WATER,
-    ));
-
-    let material_glass_clear = Arc::new(Dielectric::new(
-        glm::dvec3(1.0, 1.0, 1.0),
-        0.0,
-        refraction_indices::GLASS,
-    ));
-
-    let material_glass_clear_inner = Arc::new(Dielectric::new(
-        glm::dvec3(1.0, 1.0, 1.0),
-        0.0,
-        refraction_indices::AIR / refraction_indices::GLASS,
-    ));
-
     // Ground
+    let material_ground = Arc::new(Lambertian::new(glm::dvec3(0.5, 0.5, 0.5)));
+
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.0, -100.5, -1.0),
-        100.0,
+        glm::dvec3(0.0, -1000.0, 0.0),
+        1000.0,
         material_ground,
     )));
 
-    // Central ball
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f64 = rng.gen();
+            let center = glm::dvec3(
+                a as f64 + 0.9 * rng.gen::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rng.gen::<f64>(),
+            );
+
+            if glm::ext::sqlength(center - glm::dvec3(4.0, 0.2, 0.0)) > 0.81 {
+                let sphere_material: Arc<dyn Material> = match choose_mat {
+                    choose_mat if choose_mat < 0.8 => {
+                        let albedo = Ray::random_vec(0.0..1.0) * Ray::random_vec(0.0..1.0);
+                        Arc::new(Lambertian::new(albedo))
+                    }
+                    choose_mat if choose_mat < 0.95 => {
+                        let albedo = Ray::random_vec(0.5..1.0);
+                        let fuzz: f64 = rng.gen_range(0.0..0.5);
+                        Arc::new(Metal::new(albedo, fuzz))
+                    }
+                    _ => {
+                        let albedo = Ray::random_vec(0.5..1.0);
+                        let opacity = rng.gen();
+                        Arc::new(Dielectric::new(albedo, opacity, refraction_indices::GLASS))
+                    }
+                };
+
+                scene.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+            }
+        }
+    }
+
+    let material1 = Arc::new(Dielectric::new(
+        glm::dvec3(1.0, 1.0, 1.0),
+        1.5,
+        refraction_indices::GLASS,
+    ));
+
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.0, 0.0, -1.2),
-        0.5,
-        material_center,
+        glm::dvec3(0.0, 1.0, 0.0),
+        1.0,
+        material1,
     )));
 
-    // Right ball
-    scene.add(Arc::new(Sphere::new(
-        glm::dvec3(1.0, 0.0, -1.0),
-        0.5,
-        material_right,
-    )));
-
-    // Left ball
-    scene.add(Arc::new(Sphere::new(
-        glm::dvec3(-1.0, 0.0, -1.0),
-        0.5,
-        material_left,
-    )));
+    let material2 = Arc::new(Lambertian::new(glm::dvec3(0.4, 0.2, 0.1)));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.25, -0.15, -0.4),
-        0.2,
-        material_glass_blue,
+        glm::dvec3(-4.0, 1.0, 0.0),
+        1.0,
+        material2,
     )));
 
-    scene.add(Arc::new(Sphere::new(
-        glm::dvec3(-0.25, -0.1, -0.4),
-        0.1,
-        material_glass_clear,
-    )));
+    let material3 = Arc::new(Metal::new(glm::dvec3(0.4, 0.6, 0.5), 0.0));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(-0.25, -0.1, -0.4),
-        0.07,
-        material_glass_clear_inner,
-    )));
-
-    scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.2, 0.3, -0.5),
-        0.2,
-        material_glass_red,
+        glm::dvec3(4.0, 1.0, 0.0),
+        1.0,
+        material3,
     )));
 
     camera.render(&scene);
