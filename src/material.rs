@@ -99,9 +99,9 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
-    pub fn new(albedo: glm::DVec3, refraction_index: f64) -> Self {
+    pub fn new(albedo: glm::DVec3, opacity: f64, refraction_index: f64) -> Self {
         Self {
-            albedo,
+            albedo: albedo * (1.0 - opacity),
             refraction_index,
         }
     }

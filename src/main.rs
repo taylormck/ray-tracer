@@ -22,8 +22,9 @@ fn main() {
     let material_center = Arc::new(Lambertian::new(glm::dvec3(0.1, 0.2, 0.5)));
     let material_left = Arc::new(Metal::new(glm::dvec3(0.8, 0.8, 0.8), 0.3));
     let material_right = Arc::new(Metal::new(glm::dvec3(0.8, 0.6, 0.2), 1.0));
-    let material_glass_blue = Arc::new(Dielectric::new(glm::dvec3(1.0, 1.0, 1.0), 2.0));
-    let material_glass_clear = Arc::new(Dielectric::new(glm::dvec3(0.2, 0.4, 0.9), 5.0));
+    let material_glass_blue = Arc::new(Dielectric::new(glm::dvec3(1.0, 1.0, 1.0), 0.0, 0.9));
+    let material_glass_red = Arc::new(Dielectric::new(glm::dvec3(0.8, 0.2, 0.1), 0.0, 0.8));
+    let material_glass_clear = Arc::new(Dielectric::new(glm::dvec3(0.2, 0.4, 0.9), 0.2, 0.7));
 
     // Ground
     scene.add(Arc::new(Sphere::new(
@@ -60,9 +61,15 @@ fn main() {
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.125, -0.1, -0.5),
+        glm::dvec3(0.125, -0.1, -0.3),
         0.2,
         material_glass_clear,
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(0.1, 0.25, -0.5),
+        0.3,
+        material_glass_red,
     )));
 
     camera.render(&scene);
