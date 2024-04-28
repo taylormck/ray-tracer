@@ -15,35 +15,43 @@ use std::{ops::Range, sync::Mutex, time};
 pub struct Camera {
     image_width: usize,
     image_height: usize,
-    center: glm::DVec3,
+    samples_per_pixel: usize,
+    position: glm::DVec3,
+    max_depth: usize,
     pixel00_location: glm::DVec3,
     pixel_delta_u: glm::DVec3,
     pixel_delta_v: glm::DVec3,
-    samples_per_pixel: usize,
-    max_depth: usize,
 }
 
 impl Camera {
     pub fn new(
+        position: glm::DVec3,
+        target_position: glm::DVec3,
+        up_direction: glm::DVec3,
         aspect_ratio: f64,
         image_width: usize,
+        fov: f64,
         samples_per_pixel: usize,
         max_depth: usize,
     ) -> Self {
         // Set the camer's image_height to an int no lower than 1
-        let image_height = (image_width as f64 / aspect_ratio).floor() as usize;
+        let image_height = (image_width as f64 / aspect_ratio) as usize;
         let image_height = std::cmp::max(image_height, 1);
 
-        let center = glm::dvec3(0.0, 0.0, 0.0);
-
         // Set viewport dimensions
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let focal_length = glm::length(position - target_position);
+        let theta = fov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
+        let w = glm::normalize(position - target_position);
+        let u = glm::normalize(glm::cross(up_direction, w));
+        let v = glm::cross(w, u);
+
         // Create vectors to line the top and left borders
-        let viewport_u = glm::dvec3(viewport_width, 0.0, 0.0);
-        let viewport_v = glm::dvec3(0.0, -viewport_height, 0.0);
+        let viewport_u = u * viewport_width;
+        let viewport_v = -v * viewport_height;
 
         // Set the distance between the pixel centers in each direction
         let pixel_delta_u = viewport_u / image_width as f64;
@@ -51,7 +59,7 @@ impl Camera {
 
         // Get the upper left corner in viewport space
         let viewport_upper_left =
-            center - glm::dvec3(0.0, 0.0, focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
+            position - w * focal_length - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         // Set the top left pixel location
         let pixel00_location = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
@@ -59,7 +67,7 @@ impl Camera {
         Self {
             image_width,
             image_height,
-            center,
+            position,
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
@@ -74,7 +82,7 @@ impl Camera {
             + (self.pixel_delta_u * (x + offset.x))
             + (self.pixel_delta_v * (y + offset.y));
 
-        Ray::new(self.center, pixel_sample - self.center)
+        Ray::new(self.position, pixel_sample - self.position)
     }
 
     pub fn render(self: &Self, scene: &Scene) {
