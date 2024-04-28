@@ -8,6 +8,7 @@ use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Mate
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
 use ray_tracer_rust::vector;
+use ray_tracer_rust::vector::Vec3;
 use std::sync::Arc;
 
 const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
@@ -55,10 +56,11 @@ fn main() {
     let mut scene = Scene::new();
 
     // Ground
-    let material_ground = Arc::new(Lambertian::new(glm::dvec3(0.5, 0.5, 0.5)));
+    let material_ground = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.0, -1000.0, 0.0),
+        Vec3::new(0.0, -1000.0, 0.0),
+        vector::zero_vec(),
         1000.0,
         material_ground,
     )));
@@ -66,16 +68,20 @@ fn main() {
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat: f64 = rng.gen();
-            let center = glm::dvec3(
+
+            let center = Vec3::new(
                 a as f64 + 0.9 * rng.gen::<f64>(),
                 0.2,
                 b as f64 + 0.9 * rng.gen::<f64>(),
             );
 
             if glm::ext::sqlength(center - glm::dvec3(4.0, 0.2, 0.0)) > 0.81 {
+                let mut velocity = vector::zero_vec();
+
                 let sphere_material: Arc<dyn Material> = match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
                         let albedo = vector::random_vec(0.0..1.0) * vector::random_vec(0.0..1.0);
+                        velocity.y = rng.gen_range(0.0..0.5);
                         Arc::new(Lambertian::new(albedo))
                     }
                     choose_mat if choose_mat < 0.9 => {
@@ -90,7 +96,12 @@ fn main() {
                     }
                 };
 
-                scene.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                scene.add(Arc::new(Sphere::new(
+                    center,
+                    velocity,
+                    0.2,
+                    sphere_material,
+                )));
             }
         }
     }
@@ -103,6 +114,7 @@ fn main() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(0.0, 1.0, 0.0),
+        vector::zero_vec(),
         1.0,
         material1,
     )));
@@ -111,6 +123,7 @@ fn main() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(-4.0, 1.0, 0.0),
+        vector::zero_vec(),
         1.0,
         material2,
     )));
@@ -119,6 +132,7 @@ fn main() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(4.0, 1.0, 0.0),
+        vector::zero_vec(),
         1.0,
         material3,
     )));

@@ -3,20 +3,23 @@
 use crate::hittable::{HitRecord, HittableObject};
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::vector::Vec3;
 use glm;
 use std::{ops::Range, sync::Arc};
 
 #[derive(Clone)]
 pub struct Sphere {
-    center: glm::DVec3,
+    center: Vec3,
+    velocity: Vec3,
     radius: f64,
     material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: glm::DVec3, radius: f64, material: Arc<dyn Material>) -> Self {
+    pub fn new(center: Vec3, velocity: Vec3, radius: f64, material: Arc<dyn Material>) -> Self {
         Self {
             center,
+            velocity,
             radius,
             material,
         }
@@ -25,7 +28,7 @@ impl Sphere {
 
 impl HittableObject for Sphere {
     fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
-        let oc = self.center - r.origin();
+        let oc = (self.center + self.velocity * r.time()) - r.origin();
         let a = glm::ext::sqlength(r.direction());
         let h = glm::dot(r.direction(), oc);
         let c = glm::ext::sqlength(oc) - (self.radius * self.radius);

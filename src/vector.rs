@@ -59,6 +59,14 @@ pub fn random_unit_disk_vec() -> Vec3 {
     }
 }
 
+pub fn random_unit_square_vec() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    let x: f64 = rng.gen();
+    let y: f64 = rng.gen();
+
+    Vec3::new(x - 0.5, y - 0.5, 0.0)
+}
+
 pub fn is_vec_near_zero(v: &Vec3) -> bool {
     static EPSILON: f64 = 0.00000001;
     static RANGE: Range<f64> = 0.0..EPSILON;
@@ -79,6 +87,14 @@ pub fn clamp_vec(v: &Vec3, range: Range<f64>) -> Vec3 {
         v.y.clamp(range.start, range.end),
         v.z.clamp(range.start, range.end),
     )
+}
+
+pub fn zero_vec() -> Vec3 {
+    Vec3::new(0.0, 0.0, 0.0)
+}
+
+pub fn one_vec() -> Vec3 {
+    Vec3::new(1.0, 1.0, 1.0)
 }
 
 pub fn vec3_to_color(v: &Vec3) -> Color {

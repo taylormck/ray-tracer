@@ -17,22 +17,22 @@ pub struct Camera {
     image_width: usize,
     image_height: usize,
     samples_per_pixel: usize,
-    position: glm::DVec3,
+    position: Vec3,
     max_depth: usize,
     pixel_samples_scale: f64,
-    pixel00_location: glm::DVec3,
-    pixel_delta_u: glm::DVec3,
-    pixel_delta_v: glm::DVec3,
+    pixel00_location: Vec3,
+    pixel_delta_u: Vec3,
+    pixel_delta_v: Vec3,
     defocus_angle: f64,
-    defocus_disk_u: glm::DVec3,
-    defocus_disk_v: glm::DVec3,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
     pub fn new(
-        position: glm::DVec3,
-        target_position: glm::DVec3,
-        up_direction: glm::DVec3,
+        position: Vec3,
+        target_position: Vec3,
+        up_direction: Vec3,
         aspect_ratio: f64,
         image_width: usize,
         fov: f64,
@@ -91,7 +91,9 @@ impl Camera {
     }
 
     fn get_ray(self: &Self, x: f64, y: f64) -> Ray {
-        let offset = sample_square();
+        let mut rng = rand::thread_rng();
+
+        let offset = vector::random_unit_square_vec();
         let pixel_sample = self.pixel00_location
             + (self.pixel_delta_u * (x + offset.x))
             + (self.pixel_delta_v * (y + offset.y));
@@ -101,7 +103,9 @@ impl Camera {
             false => self.defocus_disk_sample(),
         };
 
-        Ray::new(ray_origin, pixel_sample - ray_origin)
+        let ray_time: f64 = rng.gen();
+
+        Ray::new(ray_origin, pixel_sample - ray_origin, ray_time)
     }
 
     pub fn render(self: &Self, scene: &Scene) {
@@ -168,10 +172,10 @@ impl Camera {
 
     pub fn ray_color(self: &Self, r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
         if depth <= 0 {
-            return glm::dvec3(0.0, 0.0, 0.0);
+            return vector::zero_vec();
         }
 
-        let mut record = HitRecord::new(r.direction());
+        let mut record = HitRecord::new(&r);
 
         let range = Range {
             start: 0.001,
@@ -179,33 +183,25 @@ impl Camera {
         };
 
         if scene.hit(r, &range, &mut record) {
-            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
-            let mut attenuation = Vec3::new(0.0, 0.0, 0.0);
+            let mut scattered = Ray::new(vector::zero_vec(), vector::zero_vec(), r.time());
+            let mut attenuation = vector::zero_vec();
             let mat = record.mat.clone();
 
             if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
                 return self.ray_color(&scattered, scene, depth - 1) * attenuation;
             }
 
-            return glm::dvec3(0.0, 0.0, 0.0);
+            return vector::zero_vec();
         }
 
         // Sky background
         let unit_direction = glm::normalize(r.direction());
         let a = (unit_direction.y + 1.0) * 0.5;
-        glm::dvec3(1.0, 1.0, 1.0) * (1.0 - a) + glm::dvec3(0.5, 0.7, 1.0) * a
+        vector::one_vec() * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
     }
 
-    fn defocus_disk_sample(self: &Self) -> glm::DVec3 {
+    fn defocus_disk_sample(self: &Self) -> Vec3 {
         let p = vector::random_unit_disk_vec();
         self.position + self.defocus_disk_u * p.x + self.defocus_disk_v * p.y
     }
-}
-
-fn sample_square() -> glm::DVec3 {
-    let mut rng = rand::thread_rng();
-    let x: f64 = rng.gen();
-    let y: f64 = rng.gen();
-
-    glm::dvec3(x - 0.5, y - 0.5, 0.0)
 }

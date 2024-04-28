@@ -54,7 +54,7 @@ impl Material for Lambertian {
             scatter_direction = record.normal;
         }
 
-        *scattered = Ray::new(record.point, scatter_direction);
+        *scattered = Ray::new(record.point, scatter_direction, record.in_ray.time());
         *attenuation = self.albedo;
 
         true
@@ -83,11 +83,11 @@ impl Material for Metal {
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,
     ) -> bool {
-        let mut reflected_direction = glm::reflect(record.in_vec, record.normal);
+        let mut reflected_direction = glm::reflect(record.in_ray.direction(), record.normal);
         reflected_direction = glm::normalize(reflected_direction);
         reflected_direction = reflected_direction + vector::random_unit_sphere_vec() * self.fuzz;
 
-        *scattered = Ray::new(record.point, reflected_direction);
+        *scattered = Ray::new(record.point, reflected_direction, record.in_ray.time());
         *attenuation = self.albedo;
 
         glm::dot(reflected_direction, record.normal) > 0.0
@@ -134,7 +134,7 @@ impl Material for Dielectric {
             false => self.refraction_index,
         };
 
-        let unit_direction = glm::normalize(record.in_vec);
+        let unit_direction = glm::normalize(record.in_ray.direction());
 
         let cos_theta = f64::min(glm::dot(-unit_direction, record.normal), 1.0);
         let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
@@ -146,7 +146,7 @@ impl Material for Dielectric {
             false => glm::refract(unit_direction, record.normal, ri),
         };
 
-        *scattered = Ray::new(record.point, direction);
+        *scattered = Ray::new(record.point, direction, record.in_ray.time());
         *attenuation = self.albedo;
 
         true
