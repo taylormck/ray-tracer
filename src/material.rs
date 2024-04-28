@@ -1,6 +1,7 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use glm;
+use rand::Rng;
 
 pub trait Material: Send + Sync {
     fn scatter(
@@ -92,6 +93,12 @@ impl Material for Metal {
     }
 }
 
+pub mod refraction_indices {
+    pub const AIR: f64 = 1.0;
+    pub const GLASS: f64 = 1.5;
+    pub const WATER: f64 = 1.33;
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Dielectric {
     albedo: glm::DVec3,
@@ -105,6 +112,11 @@ impl Dielectric {
             refraction_index,
         }
     }
+
+    fn reflectance(self: &Self, cosine: f64) -> f64 {
+        let r0 = (1.0 - self.refraction_index) / (1.0 + self.refraction_index).powf(2.0);
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
+    }
 }
 
 impl Material for Dielectric {
@@ -114,6 +126,8 @@ impl Material for Dielectric {
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,
     ) -> bool {
+        let mut rng = rand::thread_rng();
+
         let ri: f64 = match record.front_face {
             true => self.refraction_index.recip(),
             false => self.refraction_index,
@@ -124,7 +138,9 @@ impl Material for Dielectric {
         let cos_theta = f64::min(glm::dot(-unit_direction, record.normal), 1.0);
         let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
 
-        let direction = match ri * sin_theta > 1.0 {
+        let should_reflect = ri * sin_theta > 1.0 || self.reflectance(cos_theta) > rng.gen();
+
+        let direction = match should_reflect {
             true => glm::reflect(unit_direction, record.normal),
             false => glm::refract(unit_direction, record.normal, ri),
         };

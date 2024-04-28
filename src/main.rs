@@ -3,7 +3,7 @@
 //! brush up on graphics programming in general.
 use glm;
 use ray_tracer_rust::camera::Camera;
-use ray_tracer_rust::material::{Dielectric, Lambertian, Metal};
+use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Metal};
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
 use std::sync::Arc;
@@ -22,9 +22,30 @@ fn main() {
     let material_center = Arc::new(Lambertian::new(glm::dvec3(0.1, 0.2, 0.5)));
     let material_left = Arc::new(Metal::new(glm::dvec3(0.8, 0.8, 0.8), 0.3));
     let material_right = Arc::new(Metal::new(glm::dvec3(0.8, 0.6, 0.2), 1.0));
-    let material_glass_blue = Arc::new(Dielectric::new(glm::dvec3(1.0, 1.0, 1.0), 0.0, 0.9));
-    let material_glass_red = Arc::new(Dielectric::new(glm::dvec3(0.8, 0.2, 0.1), 0.0, 0.8));
-    let material_glass_clear = Arc::new(Dielectric::new(glm::dvec3(0.2, 0.4, 0.9), 0.2, 0.7));
+
+    let material_glass_blue = Arc::new(Dielectric::new(
+        glm::dvec3(0.2, 0.4, 0.9),
+        0.2,
+        refraction_indices::GLASS / refraction_indices::WATER,
+    ));
+
+    let material_glass_red = Arc::new(Dielectric::new(
+        glm::dvec3(0.8, 0.2, 0.1),
+        0.5,
+        refraction_indices::AIR / refraction_indices::WATER,
+    ));
+
+    let material_glass_clear = Arc::new(Dielectric::new(
+        glm::dvec3(1.0, 1.0, 1.0),
+        0.0,
+        refraction_indices::GLASS,
+    ));
+
+    let material_glass_clear_inner = Arc::new(Dielectric::new(
+        glm::dvec3(1.0, 1.0, 1.0),
+        0.0,
+        refraction_indices::AIR / refraction_indices::GLASS,
+    ));
 
     // Ground
     scene.add(Arc::new(Sphere::new(
@@ -55,15 +76,21 @@ fn main() {
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(-0.25, -0.1, -0.4),
-        0.1,
+        glm::dvec3(0.25, -0.15, -0.4),
+        0.2,
         material_glass_blue,
     )));
 
     scene.add(Arc::new(Sphere::new(
-        glm::dvec3(0.25, -0.15, -0.4),
-        0.2,
+        glm::dvec3(-0.25, -0.1, -0.4),
+        0.1,
         material_glass_clear,
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        glm::dvec3(-0.25, -0.1, -0.4),
+        0.07,
+        material_glass_clear_inner,
     )));
 
     scene.add(Arc::new(Sphere::new(
