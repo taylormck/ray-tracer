@@ -114,6 +114,10 @@ pub fn one_vec3() -> Vec3 {
     Vec3::new(1.0, 1.0, 1.0)
 }
 
+pub fn up_vec3() -> Vec3 {
+    Vec3::new(0.0, 1.0, 0.0)
+}
+
 pub fn color_to_pixel(v: &Color) -> Pixel {
     Pixel::new(v.x as u32, v.y as u32, v.z as u32)
 }

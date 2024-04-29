@@ -11,12 +11,21 @@ use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
 use std::{sync::Mutex, time};
 
+pub struct CameraSettings {
+    pub aspect_ratio: f64,
+    pub image_width: usize,
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
+    pub samples_per_pixel: usize,
+    pub max_depth: usize,
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
     image_width: usize,
     image_height: usize,
-    samples_per_pixel: usize,
     position: Vec3,
+    samples_per_pixel: usize,
     max_depth: usize,
     pixel_samples_scale: f64,
     pixel00_location: Vec3,
@@ -28,27 +37,88 @@ pub struct Camera {
 }
 
 impl Camera {
+    pub fn very_simple_debug_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 10,
+            samples_per_pixel: 4,
+            max_depth: 10,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
+    pub fn debug_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 800,
+            samples_per_pixel: 100,
+            max_depth: 20,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
+    pub fn medium_render_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 1600,
+            samples_per_pixel: 200,
+            max_depth: 50,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
+    pub fn high_render_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 1920,
+            samples_per_pixel: 500,
+            max_depth: 50,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
+    pub fn very_high_render_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 2560,
+            samples_per_pixel: 1000,
+            max_depth: 50,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
+    pub fn probably_too_high_render_settings() -> CameraSettings {
+        CameraSettings {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 3840,
+            samples_per_pixel: 10000,
+            max_depth: 100,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+        }
+    }
+
     pub fn new(
         position: Vec3,
         target_position: Vec3,
         up_direction: Vec3,
-        aspect_ratio: f64,
-        image_width: usize,
         fov: f64,
-        defocus_angle: f64,
-        focus_dist: f64,
-        samples_per_pixel: usize,
-        max_depth: usize,
+        settings: &CameraSettings,
     ) -> Self {
         // Set the camer's image_height to an int no lower than 1
-        let image_height = (image_width as f64 / aspect_ratio) as usize;
+        let image_height = (settings.image_width as f64 / settings.aspect_ratio) as usize;
         let image_height = std::cmp::max(image_height, 1);
 
         // Set viewport dimensions
         let theta = fov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focus_dist;
-        let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
+        let viewport_height = 2.0 * h * settings.focus_dist;
+        let viewport_width = viewport_height * (settings.image_width as f64 / image_height as f64);
 
         let w = glm::normalize(position - target_position);
         let u = glm::normalize(glm::cross(up_direction, w));
@@ -59,31 +129,32 @@ impl Camera {
         let viewport_v = -v * viewport_height;
 
         // Set the distance between the pixel centers in each direction
-        let pixel_delta_u = viewport_u / image_width as f64;
+        let pixel_delta_u = viewport_u / settings.image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
 
         // Get the upper left corner in viewport space
         let viewport_upper_left =
-            position - w * focus_dist - (viewport_u / 2.0) - (viewport_v / 2.0);
+            position - w * settings.focus_dist - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         // Set the top left pixel location
         let pixel00_location = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
-        let defocus_radius = focus_dist * (defocus_angle / 2.0).to_radians().tan();
+        let defocus_radius =
+            settings.focus_dist * (settings.defocus_angle / 2.0).to_radians().tan();
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 
         Self {
-            image_width,
+            image_width: settings.image_width,
             image_height,
             position,
-            pixel_samples_scale: 1.0 / samples_per_pixel as f64,
+            pixel_samples_scale: 1.0 / settings.samples_per_pixel as f64,
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
-            samples_per_pixel,
-            max_depth,
-            defocus_angle,
+            samples_per_pixel: settings.samples_per_pixel,
+            max_depth: settings.max_depth,
+            defocus_angle: settings.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
         }
