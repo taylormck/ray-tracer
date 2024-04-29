@@ -33,7 +33,19 @@ impl AABB {
     }
 
     pub fn new_empty() -> Self {
-        Self::new(0.0..0.0, 0.0..0.0, 0.0..0.0)
+        let zero_range = 0.0..0.0;
+
+        Self::new(zero_range.clone(), zero_range.clone(), zero_range)
+    }
+
+    pub fn new_universe() -> Self {
+        let infinite_range = f64::NEG_INFINITY..f64::INFINITY;
+
+        Self::new(
+            infinite_range.clone(),
+            infinite_range.clone(),
+            infinite_range,
+        )
     }
 
     pub fn combine_bounds(a: &Self, b: &Self) -> Self {
@@ -89,6 +101,23 @@ impl AABB {
             1 => Some(self.y.clone()),
             2 => Some(self.z.clone()),
             _ => None,
+        }
+    }
+
+    pub fn longest_axis_index(self: &Self) -> usize {
+        let x_size = self.x.end - self.x.start;
+        let y_size = self.y.end - self.y.start;
+        let z_size = self.z.end - self.z.start;
+
+        match x_size > y_size {
+            true => match x_size > z_size {
+                true => 0,  // x
+                false => 2, // z
+            },
+            false => match y_size > z_size {
+                true => 1,  // y
+                false => 2, // z
+            },
         }
     }
 }

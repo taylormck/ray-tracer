@@ -32,7 +32,7 @@ const CAMERA_UP: glm::DVec3 = glm::DVec3 {
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
-const SAMPLES_PER_PIXEL: usize = 100;
+const SAMPLES_PER_PIXEL: usize = 10;
 const MAX_DEPTH: usize = 20;
 const FOV: f64 = 20.0;
 const DEFOCUS_ANGLE: f64 = 0.6;

@@ -6,7 +6,6 @@ use crate::{
     ray::Ray,
 };
 
-use rand::Rng;
 use std::{cmp::Ordering, ops::Range, sync::Arc};
 
 pub struct BVHNode {
@@ -17,8 +16,13 @@ pub struct BVHNode {
 
 impl BVHNode {
     pub fn new(objects: &Vec<Arc<dyn HittableObject>>, start: usize, end: usize) -> Self {
-        let mut rng = rand::thread_rng();
-        let axis = rng.gen_range(0..=2);
+        let mut aabb = AABB::new_empty();
+
+        for object in objects[start..end].iter() {
+            aabb = AABB::combine_bounds(&aabb, object.bounding_box());
+        }
+
+        let axis = aabb.longest_axis_index();
 
         let length = end - start;
 
