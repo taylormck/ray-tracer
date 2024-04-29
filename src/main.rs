@@ -7,6 +7,7 @@ use ray_tracer_rust::{
     bvh::BVHNode,
     camera::{Camera, CameraSettings},
     material::{refraction_indices, Dielectric, Lambertian, Material, Metal},
+    quad::Quad,
     scene::Scene,
     sphere::Sphere,
     texture::{CheckerBoard, ImageTexture, NoiseTexture},
@@ -236,6 +237,64 @@ fn render_perlin_spheres_scene(settings: &CameraSettings) {
     camera.render(&scene);
 }
 
+fn render_quads_scene(settings: &CameraSettings) {
+    let left_red = Arc::new(Lambertian::from_color_components(1.0, 0.2, 0.2));
+    let back_green = Arc::new(Lambertian::from_color_components(0.2, 1.0, 0.2));
+    let right_blue = Arc::new(Lambertian::from_color_components(0.2, 0.2, 1.0));
+    let upper_orange = Arc::new(Lambertian::from_color_components(1.0, 0.5, 0.0));
+    let lower_teal = Arc::new(Lambertian::from_color_components(0.2, 0.8, 0.8));
+
+    let mut scene = Scene::new();
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(-3.0, -2.0, 5.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(-2.0, -2.0, 0.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(3.0, -2.0, 1.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(-2.0, 3.0, 1.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(-2.0, -3.0, 5.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
+    )));
+
+    let mut settings = settings.clone();
+    settings.aspect_ratio = 1.0;
+
+    let camera = Camera::new(
+        Vec3::new(0.0, 0.0, 9.0),
+        vector::zero_vec3(),
+        vector::up_vec3(),
+        80.0,
+        &settings,
+    );
+
+    camera.render(&scene);
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -266,6 +325,7 @@ fn main() {
         1 => render_checkered_spheres_scene(&settings),
         2 => render_earth_scene(&settings),
         3 => render_perlin_spheres_scene(&settings),
+        4 => render_quads_scene(&settings),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);

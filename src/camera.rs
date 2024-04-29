@@ -11,6 +11,7 @@ use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
 use std::{sync::Mutex, time};
 
+#[derive(Debug, Copy, Clone)]
 pub struct CameraSettings {
     pub aspect_ratio: f64,
     pub image_width: usize,

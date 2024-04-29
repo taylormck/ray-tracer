@@ -38,6 +38,10 @@ impl AABB {
         new_aabb
     }
 
+    pub fn from_points(a: &Vec3, b: &Vec3) -> Self {
+        Self::new(a.x..b.x, a.y..b.y, a.z..b.z)
+    }
+
     pub fn new_empty() -> Self {
         let zero_range = 0.0..0.0;
 
