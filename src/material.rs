@@ -1,6 +1,6 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::texture::{SolidColor, Texture2D};
+use crate::texture::{SolidColor, Texture};
 use crate::vector;
 use crate::vector::Color;
 use rand::Rng;
@@ -31,11 +31,11 @@ impl Material for DebugMaterial {
 
 #[derive(Debug, Clone)]
 pub struct Lambertian {
-    texture: Arc<dyn Texture2D>,
+    texture: Arc<dyn Texture>,
 }
 
 impl Lambertian {
-    pub fn from_texture(texture: Arc<dyn Texture2D>) -> Self {
+    pub fn from_texture(texture: Arc<dyn Texture>) -> Self {
         Self {
             texture: texture.clone(),
         }

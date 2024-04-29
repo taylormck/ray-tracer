@@ -4,7 +4,7 @@ use crate::vector::{Color, Vec2, Vec3};
 use std::fmt;
 use std::sync::Arc;
 
-pub trait Texture2D: fmt::Debug + Send + Sync {
+pub trait Texture: fmt::Debug + Send + Sync {
     fn sample(self: &Self, uv: &Vec2, point: &Vec3) -> Color;
 }
 
@@ -23,7 +23,7 @@ impl SolidColor {
     }
 }
 
-impl Texture2D for SolidColor {
+impl Texture for SolidColor {
     fn sample(self: &Self, _uv: &Vec2, _point: &Vec3) -> Color {
         self.color
     }
@@ -32,12 +32,12 @@ impl Texture2D for SolidColor {
 #[derive(Debug, Clone)]
 pub struct CheckerBoard {
     inverse_scale: f64,
-    even: Arc<dyn Texture2D>,
-    odd: Arc<dyn Texture2D>,
+    even: Arc<dyn Texture>,
+    odd: Arc<dyn Texture>,
 }
 
 impl CheckerBoard {
-    pub fn new(scale: f64, even: Arc<dyn Texture2D>, odd: Arc<dyn Texture2D>) -> Self {
+    pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
         Self {
             inverse_scale: scale.recip(),
             even: even.clone(),
@@ -57,7 +57,7 @@ impl CheckerBoard {
     }
 }
 
-impl Texture2D for CheckerBoard {
+impl Texture for CheckerBoard {
     fn sample(self: &Self, uv: &Vec2, point: &Vec3) -> Color {
         let point = *point * self.inverse_scale;
         let x = point.x.floor() as i32;

@@ -9,7 +9,7 @@ use rayon::prelude::*;
 
 use progressing::{mapping::Bar as MappingBar, Baring};
 use rand::Rng;
-use std::{ops::Range, sync::Mutex, time};
+use std::{sync::Mutex, time};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
@@ -138,7 +138,17 @@ impl Camera {
             })
             .collect();
 
-        eprintln!("Scene renderd in {}ms", now.elapsed().as_millis());
+        let mut elapsed = now.elapsed().as_secs();
+        let hours = elapsed / 3600;
+        elapsed %= 3600;
+
+        let minutes = elapsed / 60;
+        let seconds = elapsed % 60;
+
+        eprintln!(
+            "Scene renderd in {} hours, {} minutes, {} seconds",
+            hours, minutes, seconds
+        );
 
         // Print the PPM header
         println!("P3\n{} {}\n255\n", self.image_width, self.image_height);
@@ -147,8 +157,6 @@ impl Camera {
         for pixel in pixels {
             println!("{} {} {}", pixel.x, pixel.y, pixel.z);
         }
-
-        eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
     pub fn render_pixel(self: &Self, hittable: &dyn HittableObject, i: usize) -> Pixel {
@@ -176,10 +184,7 @@ impl Camera {
 
         let mut record = HitRecord::new(&r);
 
-        let range = Range {
-            start: 0.001,
-            end: f64::INFINITY,
-        };
+        let range = 0.001..f64::INFINITY;
 
         if hittable.hit(r, &range, &mut record) {
             let mut scattered = Ray::new(vector::zero_vec(), vector::zero_vec(), r.time());

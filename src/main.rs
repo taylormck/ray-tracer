@@ -13,34 +13,56 @@ use ray_tracer_rust::vector;
 use ray_tracer_rust::vector::{Color, Vec3};
 use std::sync::Arc;
 
-const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
-    x: 13.0,
-    y: 2.0,
-    z: 3.0,
-};
-
-const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
-    x: 0.0,
-    y: 0.0,
-    z: 0.0,
-};
-
-const CAMERA_UP: glm::DVec3 = glm::DVec3 {
-    x: 0.0,
-    y: 1.0,
-    z: 0.0,
-};
-
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
-const SAMPLES_PER_PIXEL: usize = 10;
+const SAMPLES_PER_PIXEL: usize = 100;
 const MAX_DEPTH: usize = 20;
 const FOV: f64 = 20.0;
-const DEFOCUS_ANGLE: f64 = 0.6;
+const DEFOCUS_ANGLE: f64 = 0.0;
 const FOCUS_DIST: f64 = 10.0;
 
-fn main() {
-    let mut rng = rand::thread_rng();
+fn render_checkered_spheres_scene() {
+    let mut scene = Scene::new();
+
+    let checker_texture = Arc::new(CheckerBoard::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+
+    let checker_texture = Arc::new(Lambertian::from_texture(checker_texture));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(0.0, -10.0, 0.0),
+        vector::zero_vec(),
+        10.0,
+        checker_texture.clone(),
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(0.0, 10.0, 0.0),
+        vector::zero_vec(),
+        10.0,
+        checker_texture.clone(),
+    )));
+
+    const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 100.0,
+    };
+
+    const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    const CAMERA_UP: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
 
     let camera = Camera::new(
         CAMERA_POSITION,
@@ -55,16 +77,23 @@ fn main() {
         MAX_DEPTH,
     );
 
+    camera.render(&scene);
+}
+
+fn render_bouncing_balls_scene() {
+    let mut rng = rand::thread_rng();
+
     let mut scene = Scene::new();
 
     // Ground
-    let checker = Arc::new(CheckerBoard::from_colors(
+    let checker_texture = Arc::new(CheckerBoard::from_colors(
         0.32,
         Color::new(0.2, 0.3, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
+
     // let material_ground = Arc::new(Lambertian::from_color_components(0.5, 0.5, 0.5));
-    let material_ground = Arc::new(Lambertian::from_texture(checker));
+    let material_ground = Arc::new(Lambertian::from_texture(checker_texture));
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
@@ -147,5 +176,64 @@ fn main() {
 
     let tree = BVHNode::from(scene.objects());
 
+    const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
+        x: 13.0,
+        y: 2.0,
+        z: 3.0,
+    };
+
+    const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    const CAMERA_UP: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
+
+    let camera = Camera::new(
+        CAMERA_POSITION,
+        CAMERA_TARGET,
+        CAMERA_UP,
+        ASPECT_RATIO,
+        IMAGE_WIDTH,
+        FOV,
+        DEFOCUS_ANGLE,
+        FOCUS_DIST,
+        SAMPLES_PER_PIXEL,
+        MAX_DEPTH,
+    );
+
     camera.render(&tree);
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() != 2 {
+        eprintln!("Please provide a scene id as an argument.");
+        std::process::exit(1);
+    }
+
+    let scene_id = &args[1];
+
+    let scene_id = match scene_id.parse() {
+        Ok(num) => num,
+        Err(_) => {
+            eprintln!("You must pass a non-negative integer as the only parameter");
+            std::process::exit(1);
+        }
+    };
+
+    match scene_id {
+        0 => render_bouncing_balls_scene(),
+        1 => render_checkered_spheres_scene(),
+        _ => {
+            eprintln!("Invalid scene id");
+            std::process::exit(1);
+        }
+    }
 }
