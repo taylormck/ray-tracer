@@ -3,14 +3,16 @@
 //! brush up on graphics programming in general.
 
 use rand::Rng;
-use ray_tracer_rust::bvh::BVHNode;
-use ray_tracer_rust::camera::{Camera, CameraSettings};
-use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
-use ray_tracer_rust::scene::Scene;
-use ray_tracer_rust::sphere::Sphere;
-use ray_tracer_rust::texture::{CheckerBoard, ImageTexture};
-use ray_tracer_rust::vector;
-use ray_tracer_rust::vector::{Color, Vec3};
+use ray_tracer_rust::{
+    bvh::BVHNode,
+    camera::{Camera, CameraSettings},
+    material::{refraction_indices, Dielectric, Lambertian, Material, Metal},
+    scene::Scene,
+    sphere::Sphere,
+    texture::{CheckerBoard, ImageTexture, NoiseTexture},
+    vector,
+    vector::{Color, Vec3},
+};
 
 use clap::Parser;
 use std::sync::Arc;
@@ -203,6 +205,37 @@ fn render_bouncing_balls_scene(settings: &CameraSettings) {
     camera.render(&tree);
 }
 
+fn render_perlin_spheres_scene(settings: &CameraSettings) {
+    let perlin_texture = Arc::new(NoiseTexture::new());
+    let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
+
+    let mut scene = Scene::new();
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        vector::zero_vec3(),
+        1000.0,
+        perlin_material.clone(),
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        vector::zero_vec3(),
+        2.0,
+        perlin_material.clone(),
+    )));
+
+    let camera = Camera::new(
+        Vec3::new(13.0, 2.0, 3.0),
+        vector::zero_vec3(),
+        vector::up_vec3(),
+        20.0,
+        settings,
+    );
+
+    camera.render(&scene);
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -232,6 +265,7 @@ fn main() {
         0 => render_bouncing_balls_scene(&settings),
         1 => render_checkered_spheres_scene(&settings),
         2 => render_earth_scene(&settings),
+        3 => render_perlin_spheres_scene(&settings),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);

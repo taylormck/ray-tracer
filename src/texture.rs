@@ -1,5 +1,6 @@
 //! A module for managing textures
 
+use crate::perlin::Perlin256;
 use crate::vector;
 use crate::vector::{Color, Vec2, Vec3};
 use image::{imageops, io::Reader as ImageReader, ImageBuffer, Rgb};
@@ -98,7 +99,8 @@ impl Texture for ImageTexture {
         let (_, height) = self.image.dimensions();
 
         if height <= 0 {
-            return Color::new(0.0, 1.0, 1.0);
+            // Return magenta so that texture errors are obvious
+            return Color::new(1.0, 0.0, 1.0);
         }
 
         // Just clamp instead of repeating, etc.
@@ -122,5 +124,24 @@ impl Texture for ImageTexture {
             pixel_data[1] as f64,
             pixel_data[2] as f64,
         )
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct NoiseTexture {
+    noise: Perlin256,
+}
+
+impl NoiseTexture {
+    pub fn new() -> Self {
+        Self {
+            noise: Perlin256::new(),
+        }
+    }
+}
+
+impl Texture for NoiseTexture {
+    fn sample(self: &Self, _uv: &Vec2, point: &Vec3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(point)
     }
 }

@@ -57,9 +57,6 @@ impl Material for Lambertian {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        // NOTE: We choose to always scatter here
-        // We may want to change the material to absorb some amount
-        // of the incoming light.
         let mut scatter_direction = record.normal + vector::random_unit_sphere_vec();
 
         if vector::is_vec_near_zero(&scatter_direction) {
