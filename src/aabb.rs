@@ -2,7 +2,10 @@
 //! This should help speed up the rendering times dramatically
 
 use crate::ray::Ray;
+use crate::vector::Vec3;
 use std::ops::Range;
+
+const EPSILON: f64 = 0.0001;
 
 #[derive(Clone, Debug)]
 pub struct AABB {
@@ -29,7 +32,10 @@ impl AABB {
             false => z.end..z.start,
         };
 
-        Self { x, y, z }
+        let mut new_aabb = Self { x, y, z };
+        new_aabb.pad();
+
+        new_aabb
     }
 
     pub fn new_empty() -> Self {
@@ -105,19 +111,44 @@ impl AABB {
     }
 
     pub fn longest_axis_index(self: &Self) -> usize {
+        let size = self.get_sizes();
+
+        match size.x > size.y {
+            true => match size.x > size.z {
+                true => 0,  // x
+                false => 2, // z
+            },
+            false => match size.y > size.z {
+                true => 1,  // y
+                false => 2, // z
+            },
+        }
+    }
+
+    fn get_sizes(self: &Self) -> Vec3 {
         let x_size = self.x.end - self.x.start;
         let y_size = self.y.end - self.y.start;
         let z_size = self.z.end - self.z.start;
 
-        match x_size > y_size {
-            true => match x_size > z_size {
-                true => 0,  // x
-                false => 2, // z
-            },
-            false => match y_size > z_size {
-                true => 1,  // y
-                false => 2, // z
-            },
+        Vec3::new(x_size, y_size, z_size)
+    }
+
+    fn pad(self: &mut Self) {
+        let size = self.get_sizes();
+
+        if size.x < EPSILON {
+            self.x.start -= EPSILON;
+            self.x.end += EPSILON;
+        }
+
+        if size.y < EPSILON {
+            self.y.start -= EPSILON;
+            self.y.end += EPSILON;
+        }
+
+        if size.z < EPSILON {
+            self.z.start -= EPSILON;
+            self.z.end += EPSILON;
         }
     }
 }
