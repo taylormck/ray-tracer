@@ -9,6 +9,7 @@ edition = "2021"
 clap = { version = "4.5.4", features = ["derive"] }
 glm = "0.2.3"
 image = "0.25.1"
+noise = "0.9.0"
 progress_bar = "1.0.5"
 progressing = "3.0.2"
 rand = "0.8.5"

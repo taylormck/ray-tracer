@@ -1,9 +1,9 @@
 //! A module for managing textures
 
-use crate::perlin::Perlin256;
 use crate::vector;
 use crate::vector::{Color, Vec2, Vec3};
 use image::{imageops, io::Reader as ImageReader, ImageBuffer, Rgb};
+use noise::{NoiseFn, Perlin};
 use std::fmt;
 use std::sync::Arc;
 
@@ -129,19 +129,19 @@ impl Texture for ImageTexture {
 
 #[derive(Debug, Clone)]
 pub struct NoiseTexture {
-    noise: Perlin256,
+    noise: Perlin,
 }
 
 impl NoiseTexture {
     pub fn new() -> Self {
         Self {
-            noise: Perlin256::new(),
+            noise: Perlin::new(0),
         }
     }
 }
 
 impl Texture for NoiseTexture {
     fn sample(self: &Self, _uv: &Vec2, point: &Vec3) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.noise.noise(point)
+        Color::new(1.0, 1.0, 1.0) * self.noise.get(*point.as_array())
     }
 }
