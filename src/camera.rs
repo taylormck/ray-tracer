@@ -3,7 +3,7 @@
 use crate::hittable::{HitRecord, HittableObject};
 use crate::ray::Ray;
 use crate::vector;
-use crate::vector::{Color, Vec3};
+use crate::vector::{Color, Pixel, Vec3};
 
 use rayon::prelude::*;
 
@@ -129,12 +129,12 @@ impl Camera {
             }
         };
 
-        let pixels: Vec<Color> = (0..num_pixels)
+        let pixels: Vec<Pixel> = (0..num_pixels)
             .into_par_iter()
-            .map(|i| self.get_pixel_color(hittable, i))
-            .map(|color| {
+            .map(|i| self.render_pixel(hittable, i))
+            .map(|pixel| {
                 update_progress();
-                color
+                pixel
             })
             .collect();
 
@@ -151,7 +151,7 @@ impl Camera {
         eprintln!("Data saved to file in {}ms", now.elapsed().as_millis());
     }
 
-    pub fn get_pixel_color(self: &Self, hittable: &dyn HittableObject, i: usize) -> Color {
+    pub fn render_pixel(self: &Self, hittable: &dyn HittableObject, i: usize) -> Pixel {
         let row_index = (i / self.image_width) as f64;
         let column_index = (i % self.image_width) as f64;
 
@@ -166,10 +166,10 @@ impl Camera {
         color = vector::sqrt_vec(&color);
         color = vector::clamp_vec(&color, 0.0..0.999) * 256.0;
 
-        vector::vec3_to_color(&color)
+        vector::color_to_pixel(&color)
     }
 
-    pub fn ray_color(self: &Self, r: &Ray, hittable: &dyn HittableObject, depth: usize) -> Vec3 {
+    pub fn ray_color(self: &Self, r: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
         if depth <= 0 {
             return vector::zero_vec();
         }
@@ -196,7 +196,7 @@ impl Camera {
         // Sky background
         let unit_direction = glm::normalize(r.direction());
         let a = (unit_direction.y + 1.0) * 0.5;
-        vector::one_vec() * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
+        vector::one_vec() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
     }
 
     fn defocus_disk_sample(self: &Self) -> Vec3 {

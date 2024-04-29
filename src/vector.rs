@@ -4,14 +4,21 @@ use glm;
 use rand::Rng;
 use std::ops::Range;
 
+pub type Vec2 = glm::DVec2;
 pub type Vec3 = glm::DVec3;
+pub type Color = glm::DVec3;
+pub type Pixel = glm::Vector3<u32>;
 
-pub type Color = glm::Vector3<u32>;
-
-pub fn random_vec(range: Range<f64>) -> Vec3 {
+pub fn random_vec2(range: Range<f64>) -> Vec2 {
     let mut rng = rand::thread_rng();
 
-    glm::dvec3(
+    Vec2::new(rng.gen_range(range.clone()), rng.gen_range(range.clone()))
+}
+
+pub fn random_vec3(range: Range<f64>) -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    Vec3::new(
         rng.gen_range(range.clone()),
         rng.gen_range(range.clone()),
         rng.gen_range(range.clone()),
@@ -20,8 +27,10 @@ pub fn random_vec(range: Range<f64>) -> Vec3 {
 
 pub fn random_sphere_vec() -> Vec3 {
     // TODO: there is almost certainly a better way to do this
+    // This is "Las Vegas" sampling.
+    // Look into "Monte Carlo" sampling.
     loop {
-        let attempt = random_vec(-1.0..1.0);
+        let attempt = random_vec3(-1.0..1.0);
 
         if glm::ext::sqlength(attempt) < 1.0 {
             return attempt;
@@ -47,11 +56,12 @@ pub fn random_unit_hemisphere_vec(normal: glm::DVec3) -> Vec3 {
     glm::normalize(random_hemisphere_vec(normal))
 }
 
-pub fn random_unit_disk_vec() -> Vec3 {
+pub fn random_unit_disk_vec() -> Vec2 {
     // TODO: there is almost certainly a better way to do this
+    // This is "Las Vegas" sampling.
+    // Look into "Monte Carlo" sampling.
     loop {
-        let mut attempt = random_vec(-1.0..1.0);
-        attempt.z = 0.0;
+        let attempt = random_vec2(-1.0..1.0);
 
         if glm::ext::sqlength(attempt) < 1.0 {
             return attempt;
@@ -97,20 +107,20 @@ pub fn one_vec() -> Vec3 {
     Vec3::new(1.0, 1.0, 1.0)
 }
 
-pub fn vec3_to_color(v: &Vec3) -> Color {
-    Color::new(v.x as u32, v.y as u32, v.z as u32)
+pub fn color_to_pixel(v: &Color) -> Pixel {
+    Pixel::new(v.x as u32, v.y as u32, v.z as u32)
 }
 
-pub fn random_color_range(range: Range<u32>) -> Color {
+pub fn random_color_range(range: Range<u32>) -> Pixel {
     let mut rng = rand::thread_rng();
 
-    Color {
+    Pixel {
         x: rng.gen_range(range.clone()),
         y: rng.gen_range(range.clone()),
         z: rng.gen_range(range.clone()),
     }
 }
 
-pub fn random_color() -> Color {
+pub fn random_color() -> Pixel {
     random_color_range(0..255)
 }

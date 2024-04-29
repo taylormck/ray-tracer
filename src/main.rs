@@ -8,8 +8,9 @@ use ray_tracer_rust::camera::Camera;
 use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
+use ray_tracer_rust::texture::CheckerBoard;
 use ray_tracer_rust::vector;
-use ray_tracer_rust::vector::Vec3;
+use ray_tracer_rust::vector::{Color, Vec3};
 use std::sync::Arc;
 
 const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
@@ -57,7 +58,13 @@ fn main() {
     let mut scene = Scene::new();
 
     // Ground
-    let material_ground = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+    let checker = Arc::new(CheckerBoard::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    // let material_ground = Arc::new(Lambertian::from_color_components(0.5, 0.5, 0.5));
+    let material_ground = Arc::new(Lambertian::from_texture(checker));
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
@@ -81,12 +88,12 @@ fn main() {
 
                 let sphere_material: Arc<dyn Material> = match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
-                        let albedo = vector::random_vec(0.0..1.0) * vector::random_vec(0.0..1.0);
+                        let albedo = vector::random_vec3(0.0..1.0) * vector::random_vec3(0.0..1.0);
                         velocity.y = rng.gen_range(0.0..0.5);
-                        Arc::new(Lambertian::new(albedo))
+                        Arc::new(Lambertian::from_color(albedo))
                     }
                     choose_mat if choose_mat < 0.9 => {
-                        let albedo = vector::random_vec(0.5..1.0);
+                        let albedo = vector::random_vec3(0.5..1.0);
                         let fuzz: f64 = rng.gen_range(0.0..0.5);
                         Arc::new(Metal::new(albedo, fuzz))
                     }
@@ -120,7 +127,7 @@ fn main() {
         material1,
     )));
 
-    let material2 = Arc::new(Lambertian::new(glm::dvec3(0.4, 0.2, 0.1)));
+    let material2 = Arc::new(Lambertian::from_color(glm::dvec3(0.4, 0.2, 0.1)));
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(-4.0, 1.0, 0.0),

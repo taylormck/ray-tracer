@@ -7,4 +7,5 @@ pub mod pixel;
 pub mod ray;
 pub mod scene;
 pub mod sphere;
+pub mod texture;
 pub mod vector;

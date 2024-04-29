@@ -1,14 +1,16 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::texture::{SolidColor, Texture2D};
 use crate::vector;
-use crate::vector::Vec3;
+use crate::vector::Color;
 use rand::Rng;
+use std::sync::Arc;
 
 pub trait Material: Send + Sync {
     fn scatter(
         self: &Self,
         record: &mut HitRecord,
-        attenuation: &mut Vec3,
+        attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
 }
@@ -20,21 +22,31 @@ impl Material for DebugMaterial {
     fn scatter(
         self: &Self,
         _record: &mut HitRecord,
-        _attenuation: &mut Vec3,
+        _attenuation: &mut Color,
         _scattered: &mut Ray,
     ) -> bool {
         false
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Lambertian {
-    albedo: Vec3,
+    texture: Arc<dyn Texture2D>,
 }
 
 impl Lambertian {
-    pub fn new(albedo: Vec3) -> Self {
-        Self { albedo }
+    pub fn from_texture(texture: Arc<dyn Texture2D>) -> Self {
+        Self {
+            texture: texture.clone(),
+        }
+    }
+
+    pub fn from_color(color: Color) -> Self {
+        Self::from_texture(Arc::new(SolidColor::from(color)))
+    }
+
+    pub fn from_color_components(r: f64, g: f64, b: f64) -> Self {
+        Self::from_color(Color::new(r, g, b))
     }
 }
 
@@ -42,7 +54,7 @@ impl Material for Lambertian {
     fn scatter(
         self: &Self,
         record: &mut HitRecord,
-        attenuation: &mut Vec3,
+        attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
         // NOTE: We choose to always scatter here
@@ -55,7 +67,7 @@ impl Material for Lambertian {
         }
 
         *scattered = Ray::new(record.point, scatter_direction, record.in_ray.time());
-        *attenuation = self.albedo;
+        *attenuation = self.texture.sample(&record.uv, &record.point);
 
         true
     }

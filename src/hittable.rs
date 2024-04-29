@@ -4,7 +4,7 @@ use crate::aabb::AABB;
 use crate::material::{DebugMaterial, Material};
 use crate::ray::Ray;
 use crate::vector;
-use crate::vector::Vec3;
+use crate::vector::{Vec2, Vec3};
 use glm;
 use std::{ops::Range, sync::Arc};
 
@@ -16,6 +16,7 @@ pub struct HitRecord {
     pub t: f64,
     pub front_face: bool,
     pub mat: Arc<dyn Material>,
+    pub uv: Vec2,
 }
 
 impl HitRecord {
@@ -27,6 +28,7 @@ impl HitRecord {
             t: 0.0,
             front_face: false,
             mat: Arc::new(DebugMaterial),
+            uv: Vec2::new(0.0, 0.0),
         }
     }
 
