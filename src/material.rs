@@ -147,6 +147,9 @@ impl Material for Dielectric {
         };
 
         *scattered = Ray::new(record.point, direction, record.in_ray.time());
+
+        // TODO: This will need some re-working.
+        // The attunuation should scale with how much time the light spends inside the glass.
         *attenuation = self.albedo;
 
         true
