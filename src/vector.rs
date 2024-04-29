@@ -91,7 +91,14 @@ pub fn sqrt_vec(v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn clamp_vec(v: &Vec3, range: Range<f64>) -> Vec3 {
+pub fn clamp_vec2(v: &Vec2, range: Range<f64>) -> Vec2 {
+    Vec2::new(
+        v.x.clamp(range.start, range.end),
+        v.y.clamp(range.start, range.end),
+    )
+}
+
+pub fn clamp_vec3(v: &Vec3, range: Range<f64>) -> Vec3 {
     Vec3::new(
         v.x.clamp(range.start, range.end),
         v.y.clamp(range.start, range.end),
@@ -99,11 +106,11 @@ pub fn clamp_vec(v: &Vec3, range: Range<f64>) -> Vec3 {
     )
 }
 
-pub fn zero_vec() -> Vec3 {
+pub fn zero_vec3() -> Vec3 {
     Vec3::new(0.0, 0.0, 0.0)
 }
 
-pub fn one_vec() -> Vec3 {
+pub fn one_vec3() -> Vec3 {
     Vec3::new(1.0, 1.0, 1.0)
 }
 

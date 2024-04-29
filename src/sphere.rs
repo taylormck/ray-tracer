@@ -4,9 +4,13 @@ use crate::aabb::AABB;
 use crate::hittable::{HitRecord, HittableObject};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vector::Vec3;
+use crate::vector::{Vec2, Vec3};
 use glm;
-use std::{ops::Range, sync::Arc};
+use std::{
+    f64::consts::{PI, TAU},
+    ops::Range,
+    sync::Arc,
+};
 
 #[derive(Clone)]
 pub struct Sphere {
@@ -43,6 +47,16 @@ impl Sphere {
             material,
             aabb,
         }
+    }
+
+    fn get_uv(point: &Vec3) -> Vec2 {
+        let y = -(point.y);
+        let z = -(point.z);
+
+        let theta = y.acos();
+        let phi = z.atan2(point.x) + PI;
+
+        Vec2::new(phi / TAU, theta / PI)
     }
 }
 
@@ -88,6 +102,7 @@ impl HittableObject for Sphere {
 
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_normal(r, &outward_normal);
+        record.uv = Self::get_uv(&outward_normal);
 
         true
     }

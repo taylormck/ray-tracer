@@ -172,14 +172,14 @@ impl Camera {
 
         // Use sqrt for gamma correction
         color = vector::sqrt_vec(&color);
-        color = vector::clamp_vec(&color, 0.0..0.999) * 256.0;
+        color = vector::clamp_vec3(&color, 0.0..0.999) * 256.0;
 
         vector::color_to_pixel(&color)
     }
 
     pub fn ray_color(self: &Self, r: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
         if depth <= 0 {
-            return vector::zero_vec();
+            return vector::zero_vec3();
         }
 
         let mut record = HitRecord::new(&r);
@@ -187,21 +187,21 @@ impl Camera {
         let range = 0.001..f64::INFINITY;
 
         if hittable.hit(r, &range, &mut record) {
-            let mut scattered = Ray::new(vector::zero_vec(), vector::zero_vec(), r.time());
-            let mut attenuation = vector::zero_vec();
+            let mut scattered = Ray::new(vector::zero_vec3(), vector::zero_vec3(), r.time());
+            let mut attenuation = vector::zero_vec3();
             let mat = record.mat.clone();
 
             if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
                 return self.ray_color(&scattered, hittable, depth - 1) * attenuation;
             }
 
-            return vector::zero_vec();
+            return vector::zero_vec3();
         }
 
         // Sky background
         let unit_direction = glm::normalize(r.direction());
         let a = (unit_direction.y + 1.0) * 0.5;
-        vector::one_vec() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
+        vector::one_vec3() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
     }
 
     fn defocus_disk_sample(self: &Self) -> Vec3 {

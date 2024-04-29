@@ -8,16 +8,16 @@ use ray_tracer_rust::camera::Camera;
 use ray_tracer_rust::material::{refraction_indices, Dielectric, Lambertian, Material, Metal};
 use ray_tracer_rust::scene::Scene;
 use ray_tracer_rust::sphere::Sphere;
-use ray_tracer_rust::texture::CheckerBoard;
+use ray_tracer_rust::texture::{CheckerBoard, ImageTexture};
 use ray_tracer_rust::vector;
 use ray_tracer_rust::vector::{Color, Vec3};
 use std::sync::Arc;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: usize = 800;
+const IMAGE_WIDTH: usize = 80;
 const SAMPLES_PER_PIXEL: usize = 100;
 const MAX_DEPTH: usize = 20;
-const FOV: f64 = 20.0;
+const FOV: f64 = 35.0;
 const DEFOCUS_ANGLE: f64 = 0.0;
 const FOCUS_DIST: f64 = 10.0;
 
@@ -34,14 +34,14 @@ fn render_checkered_spheres_scene() {
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -10.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         10.0,
         checker_texture.clone(),
     )));
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, 10.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         10.0,
         checker_texture.clone(),
     )));
@@ -50,6 +50,74 @@ fn render_checkered_spheres_scene() {
         x: 0.0,
         y: 0.0,
         z: 100.0,
+    };
+
+    const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    const CAMERA_UP: glm::DVec3 = glm::DVec3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
+
+    let camera = Camera::new(
+        CAMERA_POSITION,
+        CAMERA_TARGET,
+        CAMERA_UP,
+        ASPECT_RATIO,
+        IMAGE_WIDTH,
+        FOV,
+        DEFOCUS_ANGLE,
+        FOCUS_DIST,
+        SAMPLES_PER_PIXEL,
+        MAX_DEPTH,
+    );
+
+    camera.render(&scene);
+}
+
+fn render_earth_scene() {
+    let mut scene = Scene::new();
+
+    // let earth_texture_neat = Arc::new(ImageTexture::new("./images/earth-map-neat.jpg"));
+    // let earth_surface_neat = Arc::new(Lambertian::from_texture(earth_texture_neat));
+
+    let earth_texture_realistic = Arc::new(ImageTexture::new("./images/earth-realistic.jpg"));
+    let earth_surface_realistic = Arc::new(Lambertian::from_texture(earth_texture_realistic));
+
+    let scifi_planet_texture_realistic = Arc::new(ImageTexture::new("./images/scifi-planet.jpg"));
+    let scifi_planet_surface_realistic =
+        Arc::new(Lambertian::from_texture(scifi_planet_texture_realistic));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(-2.3, 0.0, 0.0),
+        vector::zero_vec3(),
+        2.0,
+        earth_surface_realistic,
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(2.3, 0.0, 0.0),
+        vector::zero_vec3(),
+        2.0,
+        scifi_planet_surface_realistic,
+    )));
+
+    // scene.add(Arc::new(Sphere::new(
+    //     Vec3::new(2.0, 0.0, 0.0),
+    //     vector::zero_vec3(),
+    //     1.5,
+    //     earth_surface_neat,
+    // )));
+    //
+    const CAMERA_POSITION: glm::DVec3 = glm::DVec3 {
+        x: -4.0,
+        y: -2.0,
+        z: 9.0,
     };
 
     const CAMERA_TARGET: glm::DVec3 = glm::DVec3 {
@@ -97,7 +165,7 @@ fn render_bouncing_balls_scene() {
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         1000.0,
         material_ground,
     )));
@@ -113,7 +181,7 @@ fn render_bouncing_balls_scene() {
             );
 
             if glm::ext::sqlength(center - glm::dvec3(4.0, 0.2, 0.0)) > 0.81 {
-                let mut velocity = vector::zero_vec();
+                let mut velocity = vector::zero_vec3();
 
                 let sphere_material: Arc<dyn Material> = match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
@@ -151,7 +219,7 @@ fn render_bouncing_balls_scene() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(0.0, 1.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         1.0,
         material1,
     )));
@@ -160,7 +228,7 @@ fn render_bouncing_balls_scene() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(-4.0, 1.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         1.0,
         material2,
     )));
@@ -169,7 +237,7 @@ fn render_bouncing_balls_scene() {
 
     scene.add(Arc::new(Sphere::new(
         glm::dvec3(4.0, 1.0, 0.0),
-        vector::zero_vec(),
+        vector::zero_vec3(),
         1.0,
         material3,
     )));
@@ -231,6 +299,7 @@ fn main() {
     match scene_id {
         0 => render_bouncing_balls_scene(),
         1 => render_checkered_spheres_scene(),
+        2 => render_earth_scene(),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);

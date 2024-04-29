@@ -23,8 +23,8 @@ impl HitRecord {
     pub fn new(in_ray: &Ray) -> Self {
         Self {
             in_ray: *in_ray,
-            point: vector::zero_vec(),
-            normal: vector::zero_vec(),
+            point: vector::zero_vec3(),
+            normal: vector::zero_vec3(),
             t: 0.0,
             front_face: false,
             mat: Arc::new(DebugMaterial),
