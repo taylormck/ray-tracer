@@ -6,9 +6,9 @@ use rand::Rng;
 use ray_tracer_rust::{
     bvh::BVHNode,
     camera::{Camera, CameraSettings, RenderSettings},
+    hittable::HittableList,
     material::{refraction_indices, Dielectric, DiffuseLight, Lambertian, Material, Metal},
     quad::Quad,
-    scene::Scene,
     sphere::Sphere,
     texture::{CheckerBoard, ImageTexture, NoiseTexture},
     vector,
@@ -19,7 +19,7 @@ use clap::Parser;
 use std::sync::Arc;
 
 fn render_checkered_spheres_scene(render_settings: &RenderSettings) {
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     let checker_texture = Arc::new(CheckerBoard::from_colors(
         0.32,
@@ -61,7 +61,7 @@ fn render_checkered_spheres_scene(render_settings: &RenderSettings) {
 }
 
 fn render_earth_scene(render_settings: &RenderSettings) {
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     // let earth_texture_neat = Arc::new(ImageTexture::new("./images/earth-map-neat.jpg"));
     // let earth_surface_neat = Arc::new(Lambertian::from_texture(earth_texture_neat));
@@ -114,7 +114,7 @@ fn render_earth_scene(render_settings: &RenderSettings) {
 fn render_bouncing_balls_scene(render_settings: &RenderSettings) {
     let mut rng = rand::thread_rng();
 
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     // Ground
     let checker_texture = Arc::new(CheckerBoard::from_colors(
@@ -228,7 +228,7 @@ fn render_perlin_spheres_scene(render_settings: &RenderSettings) {
     let perlin_texture = Arc::new(NoiseTexture::new(4.0));
     let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
 
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
@@ -284,7 +284,7 @@ fn render_quads_scene(render_settings: &RenderSettings) {
     let upper_orange = Arc::new(Lambertian::from_color_components(1.0, 0.5, 0.0));
     let lower_teal = Arc::new(Lambertian::from_color_components(0.2, 0.8, 0.8));
 
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(-3.0, -2.0, 5.0),
@@ -344,7 +344,7 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
     let green = Arc::new(Lambertian::from_color_components(0.12, 0.45, 0.15));
     let light = Arc::new(DiffuseLight::from_color_components(15.0, 15.0, 15.0));
 
-    let mut scene = Scene::new();
+    let mut scene = HittableList::new();
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(555.0, 0.0, 0.0),

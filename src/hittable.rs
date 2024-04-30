@@ -46,3 +46,54 @@ pub trait HittableObject: Send + Sync {
     fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool;
     fn bounding_box(self: &Self) -> &AABB;
 }
+
+pub struct HittableList {
+    objects: Vec<Arc<dyn HittableObject>>,
+    aabb: AABB,
+}
+
+impl HittableList {
+    pub fn new() -> Self {
+        Self {
+            objects: vec![],
+            aabb: AABB::new_empty(),
+        }
+    }
+
+    pub fn add(self: &mut Self, object: Arc<dyn HittableObject>) {
+        // We need to make a copy of the bounding box here to make
+        // the borrow checker happy.
+        let object_aabb = object.bounding_box().clone();
+
+        self.objects.push(object);
+        self.aabb = AABB::combine_bounds(&self.aabb, &object_aabb);
+    }
+
+    pub fn objects(self: &Self) -> Vec<Arc<dyn HittableObject>> {
+        self.objects.clone()
+    }
+}
+
+impl HittableObject for HittableList {
+    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+        let mut temp_record = HitRecord::new(ray);
+        let mut hit_anything = false;
+        let mut range = range.clone();
+
+        for object in self.objects.iter() {
+            if object.hit(ray, &range, &mut temp_record) {
+                hit_anything = true;
+                range.end = temp_record.t;
+
+                // TODO: could this be moved out of the loop?
+                *record = temp_record.clone();
+            }
+        }
+
+        hit_anything
+    }
+
+    fn bounding_box(self: &Self) -> &AABB {
+        &self.aabb
+    }
+}
