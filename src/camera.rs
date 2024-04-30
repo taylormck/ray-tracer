@@ -76,7 +76,7 @@ impl Camera {
         RenderSettings {
             image_width: 1280,
             samples_per_pixel: 200,
-            max_depth: 50,
+            max_depth: 40,
         }
     }
 

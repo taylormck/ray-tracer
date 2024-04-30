@@ -3,7 +3,7 @@
 use crate::vector;
 use crate::vector::{Color, Vec2, Vec3};
 use image::{imageops, io::Reader as ImageReader, ImageBuffer, Rgb};
-use noise::{NoiseFn, Perlin, Turbulence};
+use noise::{NoiseFn, Perlin, Seedable, Turbulence};
 use std::fmt;
 use std::sync::Arc;
 
@@ -131,19 +131,35 @@ impl Texture for ImageTexture {
 pub struct NoiseTexture {
     noise: Turbulence<Perlin, Perlin>,
     scale: f64,
+    phase: f64,
 }
 
 impl NoiseTexture {
-    pub fn new(scale: f64) -> Self {
-        let noise = Turbulence::new(Perlin::default());
+    pub fn new(
+        seed: u32,
+        scale: f64,
+        phase: f64,
+        roughness: usize,
+        frequency: f64,
+        power: f64,
+    ) -> Self {
+        let noise = Turbulence::new(Perlin::default())
+            .set_seed(seed)
+            .set_power(power)
+            .set_roughness(roughness)
+            .set_frequency(frequency);
 
-        Self { noise, scale }
+        Self {
+            noise,
+            scale,
+            phase,
+        }
     }
 }
 
 impl Texture for NoiseTexture {
     fn sample(self: &Self, _uv: &Vec2, point: &Vec3) -> Color {
-        let noise = self.scale * point.z + self.noise.get(*point.as_array()) * 10.0;
+        let noise = self.scale * point.z + self.noise.get(*point.as_array()) * self.phase;
         Color::new(0.5, 0.5, 0.5) * (1.0 + noise.sin())
     }
 }

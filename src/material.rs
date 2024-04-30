@@ -115,16 +115,12 @@ pub mod refraction_indices {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Dielectric {
-    albedo: glm::DVec3,
     refraction_index: f64,
 }
 
 impl Dielectric {
-    pub fn new(albedo: glm::DVec3, opacity: f64, refraction_index: f64) -> Self {
-        Self {
-            albedo: albedo * (1.0 - opacity),
-            refraction_index,
-        }
+    pub fn new(refraction_index: f64) -> Self {
+        Self { refraction_index }
     }
 
     fn reflectance(self: &Self, cosine: f64) -> f64 {
@@ -160,10 +156,7 @@ impl Material for Dielectric {
         };
 
         *scattered = Ray::new(record.point, direction, record.in_ray.time());
-
-        // TODO: This will need some re-working.
-        // The attunuation should scale with how much time the light spends inside the glass.
-        *attenuation = self.albedo;
+        *attenuation = vector::one_vec3();
 
         true
     }
