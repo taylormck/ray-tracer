@@ -704,7 +704,7 @@ fn render_final_scene(render_settings: &RenderSettings) {
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = 0)]
+    #[arg(short, long, default_value_t = 2)]
     scene: u8,
 
     #[arg(short, long, default_value_t = 1)]
@@ -723,7 +723,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let render_settings = match args.quality {
+    let mut render_settings = match args.quality {
         0 => Camera::very_simple_debug_settings(),
         1 => Camera::low_debug_settings(),
         2 => Camera::debug_settings(),
@@ -737,6 +737,18 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    if let Some(width) = args.width {
+        render_settings.image_width = width;
+    }
+
+    if let Some(samples) = args.samples {
+        render_settings.samples_per_pixel = samples;
+    }
+
+    if let Some(depth) = args.samples {
+        render_settings.max_depth = depth;
+    }
 
     match args.scene {
         0 => render_bouncing_balls_scene(&render_settings),
