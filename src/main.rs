@@ -746,7 +746,7 @@ fn main() {
         render_settings.samples_per_pixel = samples;
     }
 
-    if let Some(depth) = args.samples {
+    if let Some(depth) = args.depth {
         render_settings.max_depth = depth;
     }
 
