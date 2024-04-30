@@ -79,7 +79,7 @@ impl Quad {
         )));
 
         sides.add(Arc::new(Self::new(
-            Vec3::new(min.x, min.y, max.z),
+            Vec3::new(min.x, min.y, min.z),
             dz,
             dy,
             material.clone(),
@@ -93,7 +93,7 @@ impl Quad {
         )));
 
         sides.add(Arc::new(Self::new(
-            Vec3::new(min.x, min.y, max.z),
+            Vec3::new(min.x, min.y, min.z),
             dx,
             dz,
             material,
