@@ -13,10 +13,19 @@ use std::{sync::Mutex, time};
 
 #[derive(Debug, Copy, Clone)]
 pub struct CameraSettings {
-    pub aspect_ratio: f64,
-    pub image_width: usize,
+    pub position: Vec3,
+    pub target_position: Vec3,
+    pub up_direction: Vec3,
+    pub fov: f64,
     pub defocus_angle: f64,
     pub focus_dist: f64,
+    pub aspect_ratio: f64,
+    pub background_color: Color,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct RenderSettings {
+    pub image_width: usize,
     pub samples_per_pixel: usize,
     pub max_depth: usize,
 }
@@ -35,94 +44,73 @@ pub struct Camera {
     defocus_angle: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
+    background_color: Color,
 }
 
 impl Camera {
-    pub fn very_simple_debug_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn very_simple_debug_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 10,
             samples_per_pixel: 4,
             max_depth: 10,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn debug_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn debug_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 800,
             samples_per_pixel: 100,
             max_depth: 20,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn medium_render_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn medium_render_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 1600,
             samples_per_pixel: 200,
             max_depth: 50,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn high_render_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn high_render_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 1920,
             samples_per_pixel: 500,
             max_depth: 50,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn very_high_render_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn very_high_render_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 2560,
             samples_per_pixel: 1000,
             max_depth: 50,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn probably_too_high_render_settings() -> CameraSettings {
-        CameraSettings {
-            aspect_ratio: 16.0 / 9.0,
+    pub fn probably_too_high_render_settings() -> RenderSettings {
+        RenderSettings {
             image_width: 3840,
             samples_per_pixel: 10000,
             max_depth: 100,
-            defocus_angle: 0.6,
-            focus_dist: 10.0,
         }
     }
 
-    pub fn new(
-        position: Vec3,
-        target_position: Vec3,
-        up_direction: Vec3,
-        fov: f64,
-        settings: &CameraSettings,
-    ) -> Self {
+    pub fn new(camera_settings: &CameraSettings, render_settings: &RenderSettings) -> Self {
         // Set the camer's image_height to an int no lower than 1
-        let image_height = (settings.image_width as f64 / settings.aspect_ratio) as usize;
+        let image_height =
+            (render_settings.image_width as f64 / camera_settings.aspect_ratio) as usize;
         let image_height = std::cmp::max(image_height, 1);
 
         // Set viewport dimensions
-        let theta = fov.to_radians();
+        let theta = camera_settings.fov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * settings.focus_dist;
-        let viewport_width = viewport_height * (settings.image_width as f64 / image_height as f64);
+        let viewport_height = 2.0 * h * camera_settings.focus_dist;
+        let viewport_width =
+            viewport_height * (render_settings.image_width as f64 / image_height as f64);
 
-        let w = glm::normalize(position - target_position);
-        let u = glm::normalize(glm::cross(up_direction, w));
+        let w = glm::normalize(camera_settings.position - camera_settings.target_position);
+        let u = glm::normalize(glm::cross(camera_settings.up_direction, w));
         let v = glm::cross(w, u);
 
         // Create vectors to line the top and left borders
@@ -130,34 +118,37 @@ impl Camera {
         let viewport_v = -v * viewport_height;
 
         // Set the distance between the pixel centers in each direction
-        let pixel_delta_u = viewport_u / settings.image_width as f64;
+        let pixel_delta_u = viewport_u / render_settings.image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
 
         // Get the upper left corner in viewport space
-        let viewport_upper_left =
-            position - w * settings.focus_dist - (viewport_u / 2.0) - (viewport_v / 2.0);
+        let viewport_upper_left = camera_settings.position
+            - w * camera_settings.focus_dist
+            - (viewport_u / 2.0)
+            - (viewport_v / 2.0);
 
         // Set the top left pixel location
         let pixel00_location = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         let defocus_radius =
-            settings.focus_dist * (settings.defocus_angle / 2.0).to_radians().tan();
+            camera_settings.focus_dist * (camera_settings.defocus_angle / 2.0).to_radians().tan();
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 
         Self {
-            image_width: settings.image_width,
+            image_width: render_settings.image_width,
             image_height,
-            position,
-            pixel_samples_scale: 1.0 / settings.samples_per_pixel as f64,
+            position: camera_settings.position,
+            pixel_samples_scale: 1.0 / render_settings.samples_per_pixel as f64,
             pixel00_location,
             pixel_delta_u,
             pixel_delta_v,
-            samples_per_pixel: settings.samples_per_pixel,
-            max_depth: settings.max_depth,
-            defocus_angle: settings.defocus_angle,
+            samples_per_pixel: render_settings.samples_per_pixel,
+            max_depth: render_settings.max_depth,
+            defocus_angle: camera_settings.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            background_color: camera_settings.background_color,
         }
     }
 
@@ -249,31 +240,35 @@ impl Camera {
         vector::color_to_pixel(&color)
     }
 
-    pub fn ray_color(self: &Self, r: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
+    pub fn ray_color(self: &Self, ray: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
         if depth <= 0 {
             return vector::zero_vec3();
         }
 
-        let mut record = HitRecord::new(&r);
+        let mut record = HitRecord::new(&ray);
 
         let range = 0.001..f64::INFINITY;
 
-        if hittable.hit(r, &range, &mut record) {
-            let mut scattered = Ray::new(vector::zero_vec3(), vector::zero_vec3(), r.time());
-            let mut attenuation = vector::zero_vec3();
-            let mat = record.mat.clone();
-
-            if mat.scatter(&mut record, &mut attenuation, &mut scattered) {
-                return self.ray_color(&scattered, hittable, depth - 1) * attenuation;
-            }
-
-            return vector::zero_vec3();
+        if !hittable.hit(ray, &range, &mut record) {
+            return self.background_color;
+            // Sky background
+            // let unit_direction = glm::normalize(r.direction());
+            // let a = (unit_direction.y + 1.0) * 0.5;
+            // vector::one_vec3() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
         }
 
-        // Sky background
-        let unit_direction = glm::normalize(r.direction());
-        let a = (unit_direction.y + 1.0) * 0.5;
-        vector::one_vec3() * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
+        let emission = record.mat.emitted(&record.uv, &record.point);
+
+        let mut scattered = Ray::new(vector::zero_vec3(), vector::zero_vec3(), ray.time());
+        let mut attenuation = vector::zero_vec3();
+        let mat = record.mat.clone();
+
+        if !mat.scatter(&mut record, &mut attenuation, &mut scattered) {
+            return emission;
+        }
+        let scatter = self.ray_color(&scattered, hittable, depth - 1) * attenuation;
+
+        emission + scatter
     }
 
     fn defocus_disk_sample(self: &Self) -> Vec3 {

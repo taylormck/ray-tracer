@@ -5,12 +5,12 @@
 use rand::Rng;
 use ray_tracer_rust::{
     bvh::BVHNode,
-    camera::{Camera, CameraSettings},
-    material::{refraction_indices, Dielectric, Lambertian, Material, Metal},
+    camera::{Camera, CameraSettings, RenderSettings},
+    material::{refraction_indices, Dielectric, DiffuseLight, Lambertian, Material, Metal},
     quad::Quad,
     scene::Scene,
     sphere::Sphere,
-    texture::{CheckerBoard, ImageTexture, NoiseTexture},
+    texture::{CheckerBoard, ImageTexture, NoiseTexture, SolidColor},
     vector,
     vector::{Color, Vec3},
 };
@@ -18,7 +18,7 @@ use ray_tracer_rust::{
 use clap::Parser;
 use std::sync::Arc;
 
-fn render_checkered_spheres_scene(settings: &CameraSettings) {
+fn render_checkered_spheres_scene(render_settings: &RenderSettings) {
     let mut scene = Scene::new();
 
     let checker_texture = Arc::new(CheckerBoard::from_colors(
@@ -44,17 +44,23 @@ fn render_checkered_spheres_scene(settings: &CameraSettings) {
     )));
 
     let camera = Camera::new(
-        Vec3::new(13.0, 2.0, 3.0),
-        vector::zero_vec3(),
-        vector::up_vec3(),
-        20.0,
-        settings,
+        &CameraSettings {
+            position: Vec3::new(13.0, 2.0, 3.0),
+            target_position: vector::zero_vec3(),
+            up_direction: vector::up_vec3(),
+            fov: 20.0,
+            aspect_ratio: 16.0 / 9.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
+        },
+        render_settings,
     );
 
     camera.render(&scene);
 }
 
-fn render_earth_scene(settings: &CameraSettings) {
+fn render_earth_scene(render_settings: &RenderSettings) {
     let mut scene = Scene::new();
 
     // let earth_texture_neat = Arc::new(ImageTexture::new("./images/earth-map-neat.jpg"));
@@ -89,17 +95,23 @@ fn render_earth_scene(settings: &CameraSettings) {
     // )));
 
     let camera = Camera::new(
-        Vec3::new(-4.0, -2.0, 9.0),
-        vector::zero_vec3(),
-        vector::up_vec3(),
-        35.0,
-        settings,
+        &CameraSettings {
+            position: Vec3::new(-4.0, -2.0, 9.0),
+            target_position: vector::zero_vec3(),
+            up_direction: vector::up_vec3(),
+            fov: 35.0,
+            aspect_ratio: 16.0 / 9.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
+        },
+        render_settings,
     );
 
     camera.render(&scene);
 }
 
-fn render_bouncing_balls_scene(settings: &CameraSettings) {
+fn render_bouncing_balls_scene(render_settings: &RenderSettings) {
     let mut rng = rand::thread_rng();
 
     let mut scene = Scene::new();
@@ -196,17 +208,23 @@ fn render_bouncing_balls_scene(settings: &CameraSettings) {
     let tree = BVHNode::from(scene.objects());
 
     let camera = Camera::new(
-        Vec3::new(13.0, 2.0, 3.0),
-        vector::zero_vec3(),
-        vector::up_vec3(),
-        20.0,
-        settings,
+        &CameraSettings {
+            position: Vec3::new(13.0, 2.0, 3.0),
+            target_position: vector::zero_vec3(),
+            up_direction: vector::up_vec3(),
+            fov: 20.0,
+            aspect_ratio: 16.0 / 9.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
+        },
+        render_settings,
     );
 
     camera.render(&tree);
 }
 
-fn render_perlin_spheres_scene(settings: &CameraSettings) {
+fn render_perlin_spheres_scene(render_settings: &RenderSettings) {
     let perlin_texture = Arc::new(NoiseTexture::new(4.0));
     let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
 
@@ -226,18 +244,41 @@ fn render_perlin_spheres_scene(settings: &CameraSettings) {
         perlin_material.clone(),
     )));
 
-    let camera = Camera::new(
-        Vec3::new(13.0, 2.0, 3.0),
+    let diff_light_texture = Arc::new(SolidColor::new(4.0, 4.0, 4.0));
+    let diff_light_material = Arc::new(DiffuseLight::new(diff_light_texture));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(3.0, 1.0, -2.0),
+        Vec3::new(2.0, 0.0, 0.0),
+        Vec3::new(0.0, 2.0, 0.0),
+        diff_light_material.clone(),
+    )));
+
+    scene.add(Arc::new(Sphere::new(
+        Vec3::new(0.0, 7.0, 0.0),
         vector::zero_vec3(),
-        vector::up_vec3(),
-        20.0,
-        settings,
+        2.0,
+        diff_light_material.clone(),
+    )));
+
+    let camera = Camera::new(
+        &CameraSettings {
+            position: Vec3::new(26.0, 3.0, 6.0),
+            target_position: Vec3::new(0.0, 2.0, 0.0),
+            up_direction: vector::up_vec3(),
+            fov: 20.0,
+            aspect_ratio: 16.0 / 9.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.0, 0.0, 0.0),
+        },
+        render_settings,
     );
 
     camera.render(&scene);
 }
 
-fn render_quads_scene(settings: &CameraSettings) {
+fn render_quads_scene(render_settings: &RenderSettings) {
     let left_red = Arc::new(Lambertian::from_color_components(1.0, 0.2, 0.2));
     let back_green = Arc::new(Lambertian::from_color_components(0.2, 1.0, 0.2));
     let right_blue = Arc::new(Lambertian::from_color_components(0.2, 0.2, 1.0));
@@ -281,15 +322,18 @@ fn render_quads_scene(settings: &CameraSettings) {
         lower_teal,
     )));
 
-    let mut settings = settings.clone();
-    settings.aspect_ratio = 1.0;
-
     let camera = Camera::new(
-        Vec3::new(0.0, 0.0, 9.0),
-        vector::zero_vec3(),
-        vector::up_vec3(),
-        80.0,
-        &settings,
+        &CameraSettings {
+            position: Vec3::new(0.0, 0.0, 9.0),
+            target_position: vector::zero_vec3(),
+            up_direction: vector::up_vec3(),
+            fov: 80.0,
+            aspect_ratio: 1.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
+        },
+        render_settings,
     );
 
     camera.render(&scene);
@@ -308,7 +352,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let settings = match args.camera {
+    let render_settings = match args.camera {
         0 => Camera::very_simple_debug_settings(),
         1 => Camera::debug_settings(),
         2 => Camera::high_render_settings(),
@@ -321,11 +365,11 @@ fn main() {
     };
 
     match args.scene {
-        0 => render_bouncing_balls_scene(&settings),
-        1 => render_checkered_spheres_scene(&settings),
-        2 => render_earth_scene(&settings),
-        3 => render_perlin_spheres_scene(&settings),
-        4 => render_quads_scene(&settings),
+        0 => render_bouncing_balls_scene(&render_settings),
+        1 => render_checkered_spheres_scene(&render_settings),
+        2 => render_earth_scene(&render_settings),
+        3 => render_perlin_spheres_scene(&render_settings),
+        4 => render_quads_scene(&render_settings),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);
