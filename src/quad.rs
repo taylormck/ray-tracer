@@ -46,7 +46,7 @@ impl Quad {
         a: Vec3,
         b: Vec3,
         material: Arc<dyn Material>,
-    ) -> HittableList {
+    ) -> Arc<dyn HittableObject> {
         let mut sides = HittableList::new();
 
         let min = vector::min_vec3(&a, &b);
@@ -99,7 +99,7 @@ impl Quad {
             material,
         )));
 
-        sides
+        Arc::new(sides)
     }
 }
 

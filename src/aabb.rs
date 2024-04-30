@@ -3,7 +3,7 @@
 
 use crate::ray::Ray;
 use crate::vector::Vec3;
-use std::ops::Range;
+use std::ops::{Add, Range};
 
 const EPSILON: f64 = 0.0001;
 
@@ -169,5 +169,17 @@ impl<'a> Iterator for AabbAxisIterator<'a> {
         let result = self.aabb.axis(self.index);
         self.index += 1;
         result
+    }
+}
+
+impl Add<&Vec3> for AABB {
+    type Output = Self;
+
+    fn add(self: Self, v: &Vec3) -> Self {
+        Self {
+            x: (self.x.start + v.x)..(self.x.end + v.x),
+            y: (self.y.start + v.y)..(self.y.end + v.y),
+            z: (self.z.start + v.z)..(self.z.end + v.z),
+        }
     }
 }

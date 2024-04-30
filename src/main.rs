@@ -6,7 +6,7 @@ use rand::Rng;
 use ray_tracer_rust::{
     bvh::BVHNode,
     camera::{Camera, CameraSettings, RenderSettings},
-    hittable::HittableList,
+    hittable::{HittableList, Translate},
     material::{refraction_indices, Dielectric, DiffuseLight, Lambertian, Material, Metal},
     quad::Quad,
     sphere::Sphere,
@@ -388,17 +388,25 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
         white.clone(),
     )));
 
-    scene.add(Arc::new(Quad::box_from_opposite_corners(
-        Vec3::new(130.0, 0.0, 65.0),
-        Vec3::new(295.0, 165.0, 230.0),
+    let mut box1 = Quad::box_from_opposite_corners(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 330.0, 165.0),
         white.clone(),
-    )));
+    );
 
-    scene.add(Arc::new(Quad::box_from_opposite_corners(
-        Vec3::new(265.0, 0.0, 295.0),
-        Vec3::new(430.0, 330.0, 460.0),
+    box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+
+    scene.add(box1);
+
+    let mut box2 = Quad::box_from_opposite_corners(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 165.0, 165.0),
         white.clone(),
-    )));
+    );
+
+    box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+
+    scene.add(box2);
 
     let camera = Camera::new(
         &CameraSettings {

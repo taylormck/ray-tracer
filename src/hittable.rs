@@ -97,3 +97,38 @@ impl HittableObject for HittableList {
         &self.aabb
     }
 }
+
+pub struct Translate {
+    object: Arc<dyn HittableObject>,
+    offset: Vec3,
+    aabb: AABB,
+}
+
+impl Translate {
+    pub fn new(object: Arc<dyn HittableObject>, offset: Vec3) -> Self {
+        let aabb = object.bounding_box().clone() + &offset;
+        Self {
+            object,
+            offset,
+            aabb,
+        }
+    }
+}
+
+impl HittableObject for Translate {
+    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+        let offset_ray = Ray::new(ray.origin() - self.offset, ray.direction(), ray.time());
+
+        if !self.object.hit(&offset_ray, range, record) {
+            return false;
+        }
+
+        record.point = record.point + self.offset;
+
+        true
+    }
+
+    fn bounding_box(self: &Self) -> &AABB {
+        &self.aabb
+    }
+}
