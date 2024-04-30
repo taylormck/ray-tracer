@@ -417,7 +417,7 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
             up_direction: vector::up_vec3(),
             fov: 40.0,
             aspect_ratio: 1.0,
-            defocus_angle: 0.6,
+            defocus_angle: 0.0,
             focus_dist: 10.0,
             background_color: Color::new(0.0, 0.0, 0.0),
         },
