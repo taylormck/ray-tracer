@@ -207,7 +207,7 @@ fn render_bouncing_balls_scene(settings: &CameraSettings) {
 }
 
 fn render_perlin_spheres_scene(settings: &CameraSettings) {
-    let perlin_texture = Arc::new(NoiseTexture::new());
+    let perlin_texture = Arc::new(NoiseTexture::new(4.0));
     let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
 
     let mut scene = Scene::new();
