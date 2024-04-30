@@ -96,7 +96,15 @@ impl Camera {
         }
     }
 
-    pub fn probably_too_high_render_settings() -> RenderSettings {
+    pub fn ultra_high_render_settings() -> RenderSettings {
+        RenderSettings {
+            image_width: 2560,
+            samples_per_pixel: 10000,
+            max_depth: 50,
+        }
+    }
+
+    pub fn four_k_render_settings() -> RenderSettings {
         RenderSettings {
             image_width: 3840,
             samples_per_pixel: 10000,

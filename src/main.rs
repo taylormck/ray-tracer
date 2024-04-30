@@ -721,7 +721,8 @@ fn main() {
         3 => Camera::medium_render_settings(),
         4 => Camera::high_render_settings(),
         5 => Camera::very_high_render_settings(),
-        6 => Camera::probably_too_high_render_settings(),
+        6 => Camera::ultra_high_render_settings(),
+        7 => Camera::four_k_render_settings(),
         _ => {
             eprintln!("Invalid camera settings");
             std::process::exit(1);
