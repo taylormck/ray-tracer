@@ -56,6 +56,14 @@ impl Camera {
         }
     }
 
+    pub fn low_debug_settings() -> RenderSettings {
+        RenderSettings {
+            image_width: 400,
+            samples_per_pixel: 50,
+            max_depth: 20,
+        }
+    }
+
     pub fn debug_settings() -> RenderSettings {
         RenderSettings {
             image_width: 800,
@@ -66,7 +74,7 @@ impl Camera {
 
     pub fn medium_render_settings() -> RenderSettings {
         RenderSettings {
-            image_width: 1600,
+            image_width: 1280,
             samples_per_pixel: 200,
             max_depth: 50,
         }
@@ -92,7 +100,7 @@ impl Camera {
         RenderSettings {
             image_width: 3840,
             samples_per_pixel: 10000,
-            max_depth: 100,
+            max_depth: 50,
         }
     }
 
