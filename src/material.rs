@@ -201,3 +201,38 @@ impl Material for DiffuseLight {
         self.texture.sample(uv, point)
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct Isotropic {
+    texture: Arc<dyn Texture>,
+}
+
+impl Isotropic {
+    pub fn from_texture(texture: Arc<dyn Texture>) -> Self {
+        Self { texture }
+    }
+
+    pub fn from_color(color: Color) -> Self {
+        let texture = Arc::new(SolidColor::from(color));
+        Self { texture }
+    }
+}
+
+impl Material for Isotropic {
+    fn scatter(
+        self: &Self,
+        record: &mut HitRecord,
+        attenuation: &mut glm::DVec3,
+        scattered: &mut Ray,
+    ) -> bool {
+        *scattered = Ray::new(
+            record.point,
+            vector::random_unit_vec3(),
+            record.in_ray.time(),
+        );
+
+        *attenuation = self.texture.sample(&record.uv, &record.point);
+
+        true
+    }
+}

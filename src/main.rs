@@ -6,6 +6,7 @@ use rand::Rng;
 use ray_tracer_rust::{
     bvh::BVHNode,
     camera::{Camera, CameraSettings, RenderSettings},
+    constant_medium::ConstantMedium,
     hittable::{HittableList, RotateY, Translate},
     material::{refraction_indices, Dielectric, DiffuseLight, Lambertian, Material, Metal},
     quad::Quad,
@@ -427,6 +428,107 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
     camera.render(&scene);
 }
 
+fn render_cornell_smoke_box_scene(render_settings: &RenderSettings) {
+    let red = Arc::new(Lambertian::from_color_components(0.65, 0.05, 0.05));
+    let white = Arc::new(Lambertian::from_color_components(0.73, 0.73, 0.73));
+    let green = Arc::new(Lambertian::from_color_components(0.12, 0.45, 0.15));
+    let light = Arc::new(DiffuseLight::from_color_components(7.0, 7.0, 7.0));
+
+    let mut scene = HittableList::new();
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        green,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        red,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(133.0, 554.0, 127.0),
+        Vec3::new(330.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 305.0),
+        light,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        white.clone(),
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(555.0, 555.0, 555.0),
+        Vec3::new(-555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -555.0),
+        white.clone(),
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 555.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        white.clone(),
+    )));
+
+    let mut box1 = Quad::box_from_opposite_corners(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    );
+
+    box1 = Arc::new(ConstantMedium::from_color(
+        box1,
+        0.01,
+        Color::new(0.0, 0.0, 0.0),
+    ));
+
+    box1 = Arc::new(RotateY::new(box1, 15.0));
+    box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+
+    scene.add(box1);
+
+    let mut box2 = Quad::box_from_opposite_corners(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    );
+
+    box2 = Arc::new(ConstantMedium::from_color(
+        box2,
+        0.01,
+        Color::new(1.0, 1.0, 1.0),
+    ));
+
+    box2 = Arc::new(RotateY::new(box2, -18.0));
+    box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+
+    scene.add(box2);
+
+    let camera = Camera::new(
+        &CameraSettings {
+            position: Vec3::new(278.0, 278.0, -800.0),
+            target_position: Vec3::new(278.0, 278.0, 0.0),
+            up_direction: vector::up_vec3(),
+            fov: 40.0,
+            aspect_ratio: 1.0,
+            defocus_angle: 0.0,
+            focus_dist: 10.0,
+            background_color: Color::new(0.0, 0.0, 0.0),
+        },
+        render_settings,
+    );
+
+    camera.render(&scene);
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -442,10 +544,12 @@ fn main() {
 
     let render_settings = match args.camera {
         0 => Camera::very_simple_debug_settings(),
-        1 => Camera::debug_settings(),
-        2 => Camera::high_render_settings(),
-        3 => Camera::very_high_render_settings(),
-        4 => Camera::probably_too_high_render_settings(),
+        1 => Camera::low_debug_settings(),
+        2 => Camera::debug_settings(),
+        3 => Camera::medium_render_settings(),
+        4 => Camera::high_render_settings(),
+        5 => Camera::very_high_render_settings(),
+        6 => Camera::probably_too_high_render_settings(),
         _ => {
             eprintln!("Invalid camera settings");
             std::process::exit(1);
@@ -459,6 +563,7 @@ fn main() {
         3 => render_perlin_spheres_scene(&render_settings),
         4 => render_quads_scene(&render_settings),
         5 => render_cornell_box_scene(&render_settings),
+        6 => render_cornell_smoke_box_scene(&render_settings),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);

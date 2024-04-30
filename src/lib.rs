@@ -1,6 +1,7 @@
 pub mod aabb;
 pub mod bvh;
 pub mod camera;
+pub mod constant_medium;
 pub mod hittable;
 pub mod material;
 pub mod pixel;

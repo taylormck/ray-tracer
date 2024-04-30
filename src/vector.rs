@@ -25,6 +25,10 @@ pub fn random_vec3(range: Range<f64>) -> Vec3 {
     )
 }
 
+pub fn random_unit_vec3() -> Vec3 {
+    glm::normalize(random_vec3(0.0..1.0))
+}
+
 pub fn random_sphere_vec() -> Vec3 {
     // TODO: there is almost certainly a better way to do this
     // This is "Las Vegas" sampling.
