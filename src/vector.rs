@@ -135,3 +135,11 @@ pub fn random_color_range(range: Range<u32>) -> Pixel {
 pub fn random_color() -> Pixel {
     random_color_range(0..255)
 }
+
+pub fn min_vec3(a: &Vec3, b: &Vec3) -> Vec3 {
+    Vec3::new(f64::min(a.x, b.x), f64::min(a.y, b.y), f64::min(a.z, b.z))
+}
+
+pub fn max_vec3(a: &Vec3, b: &Vec3) -> Vec3 {
+    Vec3::new(f64::max(a.x, b.x), f64::max(a.y, b.y), f64::max(a.z, b.z))
+}

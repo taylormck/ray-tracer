@@ -2,9 +2,10 @@
 
 use crate::{
     aabb::AABB,
-    hittable::{HitRecord, HittableObject},
+    hittable::{HitRecord, HittableList, HittableObject},
     material::Material,
     ray::Ray,
+    vector,
     vector::{Vec2, Vec3},
 };
 use glm;
@@ -39,6 +40,66 @@ impl Quad {
             d: glm::dot(normal, point),
             w: n / glm::ext::sqlength(n),
         }
+    }
+
+    pub fn box_from_opposite_corners(
+        a: Vec3,
+        b: Vec3,
+        material: Arc<dyn Material>,
+    ) -> HittableList {
+        let mut sides = HittableList::new();
+
+        let min = vector::min_vec3(&a, &b);
+        let max = vector::max_vec3(&a, &b);
+        let diff = max - min;
+
+        let dx = Vec3::new(diff.x, 0.0, 0.0);
+        let dy = Vec3::new(0.0, diff.y, 0.0);
+        let dz = Vec3::new(0.0, 0.0, diff.z);
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(min.x, min.y, max.z),
+            dx,
+            dy,
+            material.clone(),
+        )));
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(max.x, min.y, max.z),
+            -dz,
+            dy,
+            material.clone(),
+        )));
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(max.x, min.y, min.z),
+            -dx,
+            dy,
+            material.clone(),
+        )));
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(min.x, min.y, max.z),
+            dz,
+            dy,
+            material.clone(),
+        )));
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(min.x, max.y, max.z),
+            dx,
+            -dz,
+            material.clone(),
+        )));
+
+        sides.add(Arc::new(Self::new(
+            Vec3::new(min.x, min.y, max.z),
+            dx,
+            dz,
+            material,
+        )));
+
+        sides
     }
 }
 

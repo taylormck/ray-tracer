@@ -388,6 +388,18 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
         white.clone(),
     )));
 
+    scene.add(Arc::new(Quad::box_from_opposite_corners(
+        Vec3::new(130.0, 0.0, 65.0),
+        Vec3::new(295.0, 165.0, 230.0),
+        white.clone(),
+    )));
+
+    scene.add(Arc::new(Quad::box_from_opposite_corners(
+        Vec3::new(265.0, 0.0, 295.0),
+        Vec3::new(430.0, 330.0, 460.0),
+        white.clone(),
+    )));
+
     let camera = Camera::new(
         &CameraSettings {
             position: Vec3::new(278.0, 278.0, -800.0),
