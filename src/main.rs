@@ -709,6 +709,15 @@ struct Args {
 
     #[arg(short, long, default_value_t = 1)]
     quality: u8,
+
+    #[arg(short, long)]
+    width: Option<usize>,
+
+    #[arg(short = 'p', long)]
+    samples: Option<usize>,
+
+    #[arg(short, long)]
+    depth: Option<usize>,
 }
 
 fn main() {
