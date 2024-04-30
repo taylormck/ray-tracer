@@ -9,9 +9,9 @@ const EPSILON: f64 = 0.0001;
 
 #[derive(Clone, Debug)]
 pub struct AABB {
-    x: Range<f64>,
-    y: Range<f64>,
-    z: Range<f64>,
+    pub x: Range<f64>,
+    pub y: Range<f64>,
+    pub z: Range<f64>,
 }
 
 impl AABB {

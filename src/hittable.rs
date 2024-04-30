@@ -132,3 +132,82 @@ impl HittableObject for Translate {
         &self.aabb
     }
 }
+
+pub struct RotateY {
+    object: Arc<dyn HittableObject>,
+    sin_theta: f64,
+    cos_theta: f64,
+    aabb: AABB,
+}
+
+impl RotateY {
+    pub fn new(object: Arc<dyn HittableObject>, angle: f64) -> Self {
+        let radians = angle.to_radians();
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let aabb = object.bounding_box().clone();
+
+        let mut min = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = i as f64 * aabb.x.end + (1 - i) as f64 * aabb.x.start;
+                    let y = j as f64 * aabb.y.end + (1 - j) as f64 * aabb.y.start;
+                    let z = k as f64 * aabb.z.end + (1 - k) as f64 * aabb.z.start;
+
+                    let new_x = cos_theta * x + sin_theta * z;
+                    let new_z = -sin_theta * x + cos_theta * z;
+
+                    let test_vec = Vec3::new(new_x, y, new_z);
+
+                    min = vector::min_vec3(&min, &test_vec);
+                    max = vector::max_vec3(&max, &test_vec);
+                }
+            }
+        }
+
+        Self {
+            object,
+            sin_theta,
+            cos_theta,
+            aabb: AABB::from_points(&min, &max),
+        }
+    }
+}
+
+impl HittableObject for RotateY {
+    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+        let mut origin = ray.origin();
+        let mut direction = ray.direction();
+
+        origin.x = self.cos_theta * ray.origin().x - self.sin_theta * ray.origin().z;
+        origin.z = self.sin_theta * ray.origin().x + self.cos_theta * ray.origin().z;
+
+        direction.x = self.cos_theta * ray.direction().x - self.sin_theta * ray.direction().z;
+        direction.z = self.sin_theta * ray.direction().x + self.cos_theta * ray.direction().z;
+
+        let rotated_ray = Ray::new(origin, direction, ray.time());
+
+        if !self.object.hit(&rotated_ray, range, record) {
+            return false;
+        }
+
+        let mut point = record.point;
+        point.x = self.cos_theta * record.point.x + self.sin_theta * record.point.z;
+        point.z = -self.sin_theta * record.point.x + self.cos_theta * record.point.z;
+        record.point = point;
+
+        let mut normal = record.normal;
+        normal.x = self.cos_theta * record.normal.x + self.sin_theta * record.normal.z;
+        normal.z = -self.sin_theta * record.normal.x + self.cos_theta * record.normal.z;
+        record.normal = normal;
+
+        true
+    }
+
+    fn bounding_box(self: &Self) -> &AABB {
+        &self.aabb
+    }
+}
