@@ -174,14 +174,16 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
-    pub fn new(texture: Arc<dyn Texture>) -> Self {
+    pub fn from_texture(texture: Arc<dyn Texture>) -> Self {
         Self { texture }
     }
 
     pub fn from_color(color: Color) -> Self {
-        let texture = Arc::new(SolidColor::from(color));
+        Self::from_texture(Arc::new(SolidColor::from(color)))
+    }
 
-        Self { texture }
+    pub fn from_color_components(r: f64, g: f64, b: f64) -> Self {
+        Self::from_color(Color::new(r, g, b))
     }
 }
 

@@ -10,7 +10,7 @@ use ray_tracer_rust::{
     quad::Quad,
     scene::Scene,
     sphere::Sphere,
-    texture::{CheckerBoard, ImageTexture, NoiseTexture, SolidColor},
+    texture::{CheckerBoard, ImageTexture, NoiseTexture},
     vector,
     vector::{Color, Vec3},
 };
@@ -244,8 +244,7 @@ fn render_perlin_spheres_scene(render_settings: &RenderSettings) {
         perlin_material.clone(),
     )));
 
-    let diff_light_texture = Arc::new(SolidColor::new(4.0, 4.0, 4.0));
-    let diff_light_material = Arc::new(DiffuseLight::new(diff_light_texture));
+    let diff_light_material = Arc::new(DiffuseLight::from_color_components(4.0, 4.0, 4.0));
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(3.0, 1.0, -2.0),
@@ -339,6 +338,73 @@ fn render_quads_scene(render_settings: &RenderSettings) {
     camera.render(&scene);
 }
 
+fn render_cornell_box_scene(render_settings: &RenderSettings) {
+    let red = Arc::new(Lambertian::from_color_components(0.65, 0.05, 0.05));
+    let white = Arc::new(Lambertian::from_color_components(0.73, 0.73, 0.73));
+    let green = Arc::new(Lambertian::from_color_components(0.12, 0.45, 0.15));
+    let light = Arc::new(DiffuseLight::from_color_components(15.0, 15.0, 15.0));
+
+    let mut scene = Scene::new();
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        green,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        red,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(343.0, 554.0, 332.0),
+        Vec3::new(-130.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -105.0),
+        light,
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        white.clone(),
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(555.0, 555.0, 555.0),
+        Vec3::new(-555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -555.0),
+        white.clone(),
+    )));
+
+    scene.add(Arc::new(Quad::new(
+        Vec3::new(0.0, 0.0, 555.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        white.clone(),
+    )));
+
+    let camera = Camera::new(
+        &CameraSettings {
+            position: Vec3::new(278.0, 278.0, -800.0),
+            target_position: Vec3::new(278.0, 278.0, 0.0),
+            up_direction: vector::up_vec3(),
+            fov: 40.0,
+            aspect_ratio: 1.0,
+            defocus_angle: 0.6,
+            focus_dist: 10.0,
+            background_color: Color::new(0.0, 0.0, 0.0),
+        },
+        render_settings,
+    );
+
+    camera.render(&scene);
+}
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -370,6 +436,7 @@ fn main() {
         2 => render_earth_scene(&render_settings),
         3 => render_perlin_spheres_scene(&render_settings),
         4 => render_quads_scene(&render_settings),
+        5 => render_cornell_box_scene(&render_settings),
         _ => {
             eprintln!("Invalid scene id");
             std::process::exit(1);
