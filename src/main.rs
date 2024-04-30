@@ -451,7 +451,7 @@ fn render_cornell_smoke_box_scene(render_settings: &RenderSettings) {
     )));
 
     scene.add(Arc::new(Quad::new(
-        Vec3::new(133.0, 554.0, 127.0),
+        Vec3::new(113.0, 554.0, 127.0),
         Vec3::new(330.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, 305.0),
         light,
