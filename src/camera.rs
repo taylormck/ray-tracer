@@ -193,7 +193,7 @@ impl Camera {
 
         let num_pixels: usize = self.image_height * self.image_width;
 
-        let mut progress = MappingBar::with_range(0, self.image_height * self.image_width).timed();
+        let mut progress = MappingBar::with_range(0, num_pixels).timed();
         progress.set_len(20);
 
         let progress = Mutex::new(progress);
@@ -210,10 +210,10 @@ impl Camera {
 
         let pixels: Vec<Pixel> = (0..num_pixels)
             .into_par_iter()
-            .map(|i| self.render_pixel(hittable, i))
-            .map(|pixel| {
+            .map(|i| {
+                let color = self.render_pixel(hittable, i);
                 update_progress();
-                pixel
+                color
             })
             .collect();
 

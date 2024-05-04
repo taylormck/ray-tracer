@@ -707,7 +707,7 @@ struct Args {
     #[arg(short, long, default_value_t = 2)]
     scene: u8,
 
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(short, long, default_value_t = 2)]
     quality: u8,
 
     #[arg(short, long)]
