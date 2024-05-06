@@ -668,19 +668,27 @@ fn render_final_scene(render_settings: &RenderSettings) {
     // Box full of balls in the top right corner
     let mut boxes_2 = HittableList::new();
     let white_material = Arc::new(Lambertian::from_color_components(0.73, 0.73, 0.73));
+    let white_sphere = Arc::new(Sphere::new(
+        vector::zero_vec3(),
+        vector::zero_vec3(),
+        10.0,
+        white_material.clone(),
+    ));
+
     let ns = 1000;
 
     for _ in 0..ns {
-        boxes_2.add(Arc::new(Sphere::new(
+        boxes_2.add(Arc::new(Translate::new(
+            white_sphere.clone(),
             vector::random_vec3(0.0..165.0),
-            vector::zero_vec3(),
-            10.0,
-            white_material.clone(),
         )));
     }
 
     scene.add(Arc::new(Translate::new(
-        Arc::new(RotateY::new(Arc::new(boxes_2), 15.0)),
+        Arc::new(RotateY::new(
+            Arc::new(BVHNode::from(boxes_2.objects())),
+            15.0,
+        )),
         Vec3::new(-100.0, 270.0, 395.0),
     )));
 
