@@ -7,14 +7,10 @@ use rand::Rng;
 use std::sync::Arc;
 
 pub trait Material: Send + Sync {
-    fn scatter(
-        self: &Self,
-        record: &mut HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool;
+    fn scatter(&self, record: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray)
+        -> bool;
 
-    fn emitted(self: &Self, _uv: &Vec2, _point: &Vec3) -> Color {
+    fn emitted(&self, _uv: &Vec2, _point: &Vec3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
 }
@@ -24,7 +20,7 @@ pub struct DebugMaterial;
 
 impl Material for DebugMaterial {
     fn scatter(
-        self: &Self,
+        &self,
         _record: &mut HitRecord,
         _attenuation: &mut Color,
         _scattered: &mut Ray,
@@ -56,7 +52,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(
-        self: &Self,
+        &self,
         record: &mut HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
@@ -91,7 +87,7 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(
-        self: &Self,
+        &self,
         record: &mut HitRecord,
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,
@@ -123,7 +119,7 @@ impl Dielectric {
         Self { refraction_index }
     }
 
-    fn reflectance(self: &Self, cosine: f64) -> f64 {
+    fn reflectance(&self, cosine: f64) -> f64 {
         let r0 = (1.0 - self.refraction_index) / (1.0 + self.refraction_index).powf(2.0);
         r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
     }
@@ -131,7 +127,7 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(
-        self: &Self,
+        &self,
         record: &mut HitRecord,
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,
@@ -182,7 +178,7 @@ impl DiffuseLight {
 
 impl Material for DiffuseLight {
     fn scatter(
-        self: &Self,
+        &self,
         _record: &mut HitRecord,
         _attenuation: &mut glm::DVec3,
         _scattered: &mut Ray,
@@ -190,7 +186,7 @@ impl Material for DiffuseLight {
         false
     }
 
-    fn emitted(self: &Self, uv: &Vec2, point: &Vec3) -> Color {
+    fn emitted(&self, uv: &Vec2, point: &Vec3) -> Color {
         self.texture.sample(uv, point)
     }
 }
@@ -213,7 +209,7 @@ impl Isotropic {
 
 impl Material for Isotropic {
     fn scatter(
-        self: &Self,
+        &self,
         record: &mut HitRecord,
         attenuation: &mut glm::DVec3,
         scattered: &mut Ray,

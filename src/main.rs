@@ -20,7 +20,7 @@ use clap::Parser;
 use std::sync::Arc;
 
 fn render_checkered_spheres_scene(render_settings: &RenderSettings) {
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     let checker_texture = Arc::new(CheckerBoard::from_colors(
         0.32,
@@ -62,7 +62,7 @@ fn render_checkered_spheres_scene(render_settings: &RenderSettings) {
 }
 
 fn render_earth_scene(render_settings: &RenderSettings) {
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     // let earth_texture_neat = Arc::new(ImageTexture::new("./images/earth-map-neat.jpg"));
     // let earth_surface_neat = Arc::new(Lambertian::from_texture(earth_texture_neat));
@@ -115,7 +115,7 @@ fn render_earth_scene(render_settings: &RenderSettings) {
 fn render_bouncing_balls_scene(render_settings: &RenderSettings) {
     let mut rng = rand::thread_rng();
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     // Ground
     let checker_texture = Arc::new(CheckerBoard::from_colors(
@@ -221,7 +221,7 @@ fn render_perlin_spheres_scene(render_settings: &RenderSettings) {
     let perlin_texture = Arc::new(NoiseTexture::new(0, 4.0, 10.0, 6, 1.0, 1.0));
     let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
@@ -258,7 +258,7 @@ fn render_simple_light_scene(render_settings: &RenderSettings) {
     let perlin_texture = Arc::new(NoiseTexture::new(0, 4.0, 10.0, 6, 1.0, 1.0));
     let perlin_material = Arc::new(Lambertian::from_texture(perlin_texture));
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     scene.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
@@ -314,7 +314,7 @@ fn render_quads_scene(render_settings: &RenderSettings) {
     let upper_orange = Arc::new(Lambertian::from_color_components(1.0, 0.5, 0.0));
     let lower_teal = Arc::new(Lambertian::from_color_components(0.2, 0.8, 0.8));
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(-3.0, -2.0, 5.0),
@@ -374,7 +374,7 @@ fn render_cornell_box_scene(render_settings: &RenderSettings) {
     let green = Arc::new(Lambertian::from_color_components(0.12, 0.45, 0.15));
     let light = Arc::new(DiffuseLight::from_color_components(15.0, 15.0, 15.0));
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(555.0, 0.0, 0.0),
@@ -463,7 +463,7 @@ fn render_cornell_smoke_box_scene(render_settings: &RenderSettings) {
     let green = Arc::new(Lambertian::from_color_components(0.12, 0.45, 0.15));
     let light = Arc::new(DiffuseLight::from_color_components(7.0, 7.0, 7.0));
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     scene.add(Arc::new(Quad::new(
         Vec3::new(555.0, 0.0, 0.0),
@@ -561,10 +561,10 @@ fn render_cornell_smoke_box_scene(render_settings: &RenderSettings) {
 fn render_final_scene(render_settings: &RenderSettings) {
     let mut rng = rand::thread_rng();
 
-    let mut scene = HittableList::new();
+    let mut scene = HittableList::default();
 
     // Floor boxes
-    let mut boxes_1 = HittableList::new();
+    let mut boxes_1 = HittableList::default();
     let ground = Arc::new(Lambertian::from_color_components(0.48, 0.83, 0.53));
     let boxes_per_side = 20;
 
@@ -666,7 +666,7 @@ fn render_final_scene(render_settings: &RenderSettings) {
     )));
 
     // Box full of balls in the top right corner
-    let mut boxes_2 = HittableList::new();
+    let mut boxes_2 = HittableList::default();
     let white_material = Arc::new(Lambertian::from_color_components(0.73, 0.73, 0.73));
     let white_sphere = Arc::new(Sphere::new(
         vector::zero_vec3(),

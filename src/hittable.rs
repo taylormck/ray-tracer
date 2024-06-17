@@ -43,24 +43,18 @@ impl HitRecord {
 }
 
 pub trait HittableObject: Send + Sync {
-    fn hit(self: &Self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool;
-    fn bounding_box(self: &Self) -> &AABB;
+    fn hit(&self, r: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool;
+    fn bounding_box(&self) -> &AABB;
 }
 
+#[derive(Default)]
 pub struct HittableList {
     objects: Vec<Arc<dyn HittableObject>>,
     aabb: AABB,
 }
 
 impl HittableList {
-    pub fn new() -> Self {
-        Self {
-            objects: vec![],
-            aabb: AABB::new_empty(),
-        }
-    }
-
-    pub fn add(self: &mut Self, object: Arc<dyn HittableObject>) {
+    pub fn add(&mut self, object: Arc<dyn HittableObject>) {
         // We need to make a copy of the bounding box here to make
         // the borrow checker happy.
         let object_aabb = object.bounding_box().clone();
@@ -69,13 +63,13 @@ impl HittableList {
         self.aabb = AABB::combine_bounds(&self.aabb, &object_aabb);
     }
 
-    pub fn objects(self: &Self) -> Vec<Arc<dyn HittableObject>> {
+    pub fn objects(&self) -> Vec<Arc<dyn HittableObject>> {
         self.objects.clone()
     }
 }
 
 impl HittableObject for HittableList {
-    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let mut temp_record = HitRecord::new(ray);
         let mut hit_anything = false;
         let mut range = range.clone();
@@ -93,7 +87,7 @@ impl HittableObject for HittableList {
         hit_anything
     }
 
-    fn bounding_box(self: &Self) -> &AABB {
+    fn bounding_box(&self) -> &AABB {
         &self.aabb
     }
 }
@@ -116,7 +110,7 @@ impl Translate {
 }
 
 impl HittableObject for Translate {
-    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let offset_ray = Ray::new(ray.origin() - self.offset, ray.direction(), ray.time());
 
         if !self.object.hit(&offset_ray, range, record) {
@@ -128,7 +122,7 @@ impl HittableObject for Translate {
         true
     }
 
-    fn bounding_box(self: &Self) -> &AABB {
+    fn bounding_box(&self) -> &AABB {
         &self.aabb
     }
 }
@@ -178,7 +172,7 @@ impl RotateY {
 }
 
 impl HittableObject for RotateY {
-    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let mut origin = ray.origin();
         let mut direction = ray.direction();
 
@@ -207,7 +201,7 @@ impl HittableObject for RotateY {
         true
     }
 
-    fn bounding_box(self: &Self) -> &AABB {
+    fn bounding_box(&self) -> &AABB {
         &self.aabb
     }
 }

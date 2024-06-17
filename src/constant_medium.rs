@@ -86,7 +86,7 @@ impl HittableObject for ConstantMedium {
         true
     }
 
-    fn bounding_box(self: &Self) -> &crate::aabb::AABB {
+    fn bounding_box(&self) -> &crate::aabb::AABB {
         self.boundary.bounding_box()
     }
 }

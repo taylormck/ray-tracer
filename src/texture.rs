@@ -8,7 +8,7 @@ use std::fmt;
 use std::sync::Arc;
 
 pub trait Texture: fmt::Debug + Send + Sync {
-    fn sample(self: &Self, uv: &Vec2, point: &Vec3) -> Color;
+    fn sample(&self, uv: &Vec2, point: &Vec3) -> Color;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -27,7 +27,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn sample(self: &Self, _uv: &Vec2, _point: &Vec3) -> Color {
+    fn sample(&self, _uv: &Vec2, _point: &Vec3) -> Color {
         self.color
     }
 }
@@ -61,13 +61,13 @@ impl CheckerBoard {
 }
 
 impl Texture for CheckerBoard {
-    fn sample(self: &Self, uv: &Vec2, point: &Vec3) -> Color {
+    fn sample(&self, uv: &Vec2, point: &Vec3) -> Color {
         let point = *point * self.inverse_scale;
         let x = point.x.floor() as i32;
         let y = point.y.floor() as i32;
         let z = point.z.floor() as i32;
 
-        match (x + y + z) as i32 % 2 {
+        match (x + y + z) % 2 {
             0 => self.even.sample(uv, &point),
             _ => self.odd.sample(uv, &point),
         }
@@ -95,16 +95,16 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn sample(self: &Self, uv: &Vec2, _point: &Vec3) -> Color {
+    fn sample(&self, uv: &Vec2, _point: &Vec3) -> Color {
         let (_, height) = self.image.dimensions();
 
-        if height <= 0 {
+        if height == 0 {
             // Return magenta so that texture errors are obvious
             return Color::new(1.0, 0.0, 1.0);
         }
 
         // Just clamp instead of repeating, etc.
-        let uv = vector::clamp_vec2(&uv, 0.0..1.0);
+        let uv = vector::clamp_vec2(uv, 0.0..1.0);
 
         // The image library uses f32 instead of f64, so we'll need
         // to scale down to sample the texture.
@@ -158,7 +158,7 @@ impl NoiseTexture {
 }
 
 impl Texture for NoiseTexture {
-    fn sample(self: &Self, _uv: &Vec2, point: &Vec3) -> Color {
+    fn sample(&self, _uv: &Vec2, point: &Vec3) -> Color {
         let noise = self.scale * point.z + self.noise.get(*point.as_array()) * self.phase;
         Color::new(0.5, 0.5, 0.5) * (1.0 + noise.sin())
     }

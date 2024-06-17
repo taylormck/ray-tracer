@@ -168,7 +168,7 @@ impl Camera {
         }
     }
 
-    fn get_ray(self: &Self, x: f64, y: f64) -> Ray {
+    fn get_ray(&self, x: f64, y: f64) -> Ray {
         let mut rng = rand::thread_rng();
 
         let offset = vector::random_unit_square_vec();
@@ -186,7 +186,7 @@ impl Camera {
         Ray::new(ray_origin, pixel_sample - ray_origin, ray_time)
     }
 
-    pub fn render(self: &Self, hittable: &dyn HittableObject) {
+    pub fn render(&self, hittable: &dyn HittableObject) {
         eprintln!("Rendering scene...");
 
         let now = time::Instant::now();
@@ -238,7 +238,7 @@ impl Camera {
         }
     }
 
-    pub fn render_pixel(self: &Self, hittable: &dyn HittableObject, i: usize) -> Pixel {
+    pub fn render_pixel(&self, hittable: &dyn HittableObject, i: usize) -> Pixel {
         let row_index = (i / self.image_width) as f64;
         let column_index = (i % self.image_width) as f64;
 
@@ -256,12 +256,12 @@ impl Camera {
         vector::color_to_pixel(&color)
     }
 
-    pub fn ray_color(self: &Self, ray: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
-        if depth <= 0 {
+    pub fn ray_color(&self, ray: &Ray, hittable: &dyn HittableObject, depth: usize) -> Color {
+        if depth == 0 {
             return vector::zero_vec3();
         }
 
-        let mut record = HitRecord::new(&ray);
+        let mut record = HitRecord::new(ray);
 
         let range = 0.001..f64::INFINITY;
 
@@ -287,7 +287,7 @@ impl Camera {
         emission + scatter
     }
 
-    fn defocus_disk_sample(self: &Self) -> Vec3 {
+    fn defocus_disk_sample(&self) -> Vec3 {
         let p = vector::random_unit_disk_vec();
         self.position + self.defocus_disk_u * p.x + self.defocus_disk_v * p.y
     }

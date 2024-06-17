@@ -47,7 +47,7 @@ impl Quad {
         b: Vec3,
         material: Arc<dyn Material>,
     ) -> Arc<dyn HittableObject> {
-        let mut sides = HittableList::new();
+        let mut sides = HittableList::default();
 
         let min = vector::min_vec3(&a, &b);
         let max = vector::max_vec3(&a, &b);
@@ -104,7 +104,7 @@ impl Quad {
 }
 
 impl HittableObject for Quad {
-    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         let denominator = glm::dot(self.normal, ray.direction());
 
         if f64::abs(denominator) < EPSILON {
@@ -136,7 +136,7 @@ impl HittableObject for Quad {
         true
     }
 
-    fn bounding_box(self: &Self) -> &AABB {
+    fn bounding_box(&self) -> &AABB {
         &self.aabb
     }
 }
@@ -146,7 +146,7 @@ fn create_bounding_box(point: &Vec3, u: &Vec3, v: &Vec3) -> AABB {
     let pv = *point + *v;
     let puv = pu + *v;
 
-    let diagonal_1 = AABB::from_points(&point, &puv);
+    let diagonal_1 = AABB::from_points(point, &puv);
     let diagonal_2 = AABB::from_points(&pu, &pv);
 
     AABB::combine_bounds(&diagonal_1, &diagonal_2)

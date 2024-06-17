@@ -16,7 +16,7 @@ pub struct BVHNode {
 
 impl BVHNode {
     pub fn new(objects: &Vec<Arc<dyn HittableObject>>, start: usize, end: usize) -> Self {
-        let mut aabb = AABB::new_empty();
+        let mut aabb = AABB::default();
 
         for object in objects[start..end].iter() {
             aabb = AABB::combine_bounds(&aabb, object.bounding_box());
@@ -34,8 +34,8 @@ impl BVHNode {
 
                 let mid = start + length / 2;
 
-                let left: Arc<dyn HittableObject> = Arc::new(Self::new(&objects, start, mid));
-                let right: Arc<dyn HittableObject> = Arc::new(Self::new(&objects, mid, end));
+                let left: Arc<dyn HittableObject> = Arc::new(Self::new(objects, start, mid));
+                let right: Arc<dyn HittableObject> = Arc::new(Self::new(objects, mid, end));
 
                 (left, right)
             }
@@ -60,17 +60,17 @@ impl BVHNode {
         let b_axis = b.bounding_box().axis(axis).unwrap();
 
         if a_axis.start < b_axis.start {
-            return Ordering::Less;
+            Ordering::Less
         } else if b_axis.start < a_axis.start {
-            return Ordering::Greater;
+            Ordering::Greater
         } else {
-            return Ordering::Equal;
+            Ordering::Equal
         }
     }
 }
 
 impl HittableObject for BVHNode {
-    fn hit(self: &Self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, range: &Range<f64>, record: &mut HitRecord) -> bool {
         if !self.aabb.hit(ray, range.clone()) {
             return false;
         }
@@ -87,7 +87,7 @@ impl HittableObject for BVHNode {
         hit_left || hit_right
     }
 
-    fn bounding_box(self: &Self) -> &AABB {
+    fn bounding_box(&self) -> &AABB {
         &self.aabb
     }
 }

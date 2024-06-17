@@ -7,7 +7,7 @@ use std::ops::{Add, Range};
 
 const EPSILON: f64 = 0.0001;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct AABB {
     pub x: Range<f64>,
     pub y: Range<f64>,
@@ -42,12 +42,6 @@ impl AABB {
         Self::new(a.x..b.x, a.y..b.y, a.z..b.z)
     }
 
-    pub fn new_empty() -> Self {
-        let zero_range = 0.0..0.0;
-
-        Self::new(zero_range.clone(), zero_range.clone(), zero_range)
-    }
-
     pub fn new_universe() -> Self {
         let infinite_range = f64::NEG_INFINITY..f64::INFINITY;
 
@@ -75,7 +69,7 @@ impl AABB {
         }
     }
 
-    pub fn hit(self: &Self, ray: &Ray, mut range: Range<f64>) -> bool {
+    pub fn hit(&self, ray: &Ray, mut range: Range<f64>) -> bool {
         for (i, axis) in self.axes().enumerate() {
             let adinv: f64 = ray.direction()[i].recip();
 
@@ -105,7 +99,7 @@ impl AABB {
         }
     }
 
-    pub fn axis(self: &Self, i: usize) -> Option<Range<f64>> {
+    pub fn axis(&self, i: usize) -> Option<Range<f64>> {
         match i {
             0 => Some(self.x.clone()),
             1 => Some(self.y.clone()),
@@ -114,7 +108,7 @@ impl AABB {
         }
     }
 
-    pub fn longest_axis_index(self: &Self) -> usize {
+    pub fn longest_axis_index(&self) -> usize {
         let size = self.get_sizes();
 
         match size.x > size.y {
@@ -129,7 +123,7 @@ impl AABB {
         }
     }
 
-    fn get_sizes(self: &Self) -> Vec3 {
+    fn get_sizes(&self) -> Vec3 {
         let x_size = self.x.end - self.x.start;
         let y_size = self.y.end - self.y.start;
         let z_size = self.z.end - self.z.start;
@@ -137,7 +131,7 @@ impl AABB {
         Vec3::new(x_size, y_size, z_size)
     }
 
-    fn pad(self: &mut Self) {
+    fn pad(&mut self) {
         let size = self.get_sizes();
 
         if size.x < EPSILON {
@@ -175,7 +169,7 @@ impl<'a> Iterator for AabbAxisIterator<'a> {
 impl Add<&Vec3> for AABB {
     type Output = Self;
 
-    fn add(self: Self, v: &Vec3) -> Self {
+    fn add(self, v: &Vec3) -> Self {
         Self {
             x: (self.x.start + v.x)..(self.x.end + v.x),
             y: (self.y.start + v.y)..(self.y.end + v.y),
