@@ -225,7 +225,7 @@ impl Camera {
         let seconds = elapsed % 60;
 
         eprintln!(
-            "Scene renderd in {} hours, {} minutes, {} seconds",
+            "Scene rendered in {} hours, {} minutes, {} seconds",
             hours, minutes, seconds
         );
 
